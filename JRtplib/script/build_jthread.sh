@@ -1,10 +1,7 @@
 #!/bin/bash
 
-
 if [ -d "./build" ]; then
   rm -rf build
-  else
-    echo "do nothing"
 fi
 mkdir build && cd build
 cmake ..

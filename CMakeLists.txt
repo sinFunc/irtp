@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 11)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pthread")
 
-option(LIB_MODE "build a library" ON)
+option(LIB_MODE "build a library" OFF)
 option(ENABLE_TESTER "run tester" ON)
 
 
@@ -21,12 +21,10 @@ if(NOT BcUnit_FOUND)
             OUTPUT_VARIABLE output
     )
     if(result EQUAL 0)
-        message(STATUS "Executive ${SHELL_PATH} successfully")
+        message(STATUS "Executive ${SHELL_PATH} successfully.output=${output}")
     else()
-        message(STATUS "Executive ${SHELL_PATH} unsuccessfully")
-        message(STATUS "output=${output},result=${result}")
+        message(STATUS "Executive ${SHELL_PATH} unsuccessfully.output=${output},result=${result}")
     endif()
-
 endif()
 
 
@@ -41,10 +39,9 @@ if(NOT MbedTLS_FOUND)
             OUTPUT_VARIABLE output
     )
     if(result EQUAL 0)
-        message(STATUS "Executive ${SHELL_PATH} successfully")
+        message(STATUS "Executive ${SHELL_PATH} successfully.output=${output}")
     else()
-        message(STATUS "Executive ${SHELL_PATH} unsuccessfully")
-        message(STATUS "output=${output},result=${result}")
+        message(STATUS "Executive ${SHELL_PATH} unsuccessfully.output=${output},result=${result}")
     endif()
 endif()
 
@@ -59,10 +56,9 @@ if(NOT bctoolbox_FOUND)
             OUTPUT_VARIABLE output
     )
     if(result EQUAL 0)
-        message(STATUS "Executive ${SHELL_PATH} successfully")
+        message(STATUS "Executive ${SHELL_PATH} successfully.output=${output}")
     else()
-        message(STATUS "Executive ${SHELL_PATH} unsuccessfully")
-        message(STATUS "output=${output},result=${result}")
+        message(STATUS "Executive ${SHELL_PATH} unsuccessfully.output=${output},result=${result}")
     endif()
 endif()
 
@@ -87,11 +83,10 @@ if(NOT JThread_FOUND)
             OUTPUT_VARIABLE output
     )
     if(result EQUAL 0)
-        message(STATUS "Executive ${SHELL_PATH} successfully")
+        message(STATUS "Executive ${SHELL_PATH} successfully.output=${output}")
     else()
-        message(STATUS "Executive ${SHELL_PATH} unsuccessfully")
+        message(STATUS "Executive ${SHELL_PATH} unsuccessfully.output=${output},result=${result}")
     endif()
-      message(STATUS "output=${output}")
 endif()
 
 find_package(JRTPLIB QUIET)
@@ -105,11 +100,10 @@ if(NOT JRTPLIB_FOUND)
             OUTPUT_VARIABLE output
     )
     if(result EQUAL 0)
-        message(STATUS "Executive ${SHELL_PATH} successfully")
+        message(STATUS "Executive ${SHELL_PATH} successfully.output=${output}")
     else()
-        message(STATUS "Executive ${SHELL_PATH} unsuccessfully")
+        message(STATUS "Executive ${SHELL_PATH} unsuccessfully.output=${output},result=${result}")
     endif()
-	message(STATUS "output=${output}")
 endif()
 
 

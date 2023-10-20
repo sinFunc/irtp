@@ -4,11 +4,9 @@
 #cd ibuild
 if [ -d "./ibuild" ]; then
   rm -rf ibuild
-  else
-    echo "do nothing"
 fi
 mkdir ibuild && cd ibuild
 cmake .. -DENABLE_SHARED=NO
 make -j 5
-echo 123456 | sudo -S make install
-#sudo make install
+#echo 123456 | sudo -S make install
+sudo make install

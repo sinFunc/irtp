@@ -80,13 +80,14 @@ set(ORTP_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}
 #include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 #include_directories(${CMAKE_CURRENT_BINARY_DIR}) #cmake build dir
 
+
 set(POSIXTIMER_INTERVAL 10000)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/ortp-config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/ortp-config.h)#make header file
 set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/ortp-config.h PROPERTIES GENERATED ON)#tell cmake header file is build
 ##add_definitions(-DHAVE_CONFIG_H)
 
 
-#add_subdirectory(include) #import header file
+add_subdirectory(include) #import header file
 
 #--------------------------------SOURCE---------------------------------
 set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)

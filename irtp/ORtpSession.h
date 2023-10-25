@@ -29,7 +29,6 @@ public:
 
 private:
     RtpSession*                 m_pRtpSession;
-    static std::atomic_int32_t  m_staInitCount;
 
 
 };

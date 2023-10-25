@@ -4,11 +4,13 @@
 
 #include "ORtpSession.h"
 #include <assert.h>
+#include <atomic>
+#include "ICommon.h"
 
 
 namespace iRtp{
 
-std::atomic_int32_t  ORtpSession::m_staInitCount(0);
+static std::atomic_int32_t gStaticInitCount(0);
 
 ORtpSession::ORtpSession():m_pRtpSession(nullptr)
 {
@@ -57,8 +59,8 @@ bool ORtpSession::Init(const RtpSessionInitData *pData)
 
 void ORtpSession::StaticInit()
 {
-    if(m_staInitCount<=0)ortp_init();
-    ++m_staInitCount;
+    if(gStaticInitCount<=0)ortp_init();
+    ++gStaticInitCount;
 }
 
 bool ORtpSession::Start()
@@ -85,9 +87,9 @@ bool ORtpSession::Stop()
 
 void ORtpSession::StaticUnInit()
 {
-    --m_staInitCount;
+    --gStaticInitCount;
 
-    if(m_staInitCount<=0){
+    if(gStaticInitCount<=0){
         ortp_exit();
         ortp_global_stats_display();
     }

@@ -1,13 +1,12 @@
 //
 // Created by sean on 2023/10/16.
 //
-
 #include "JRtpSession.h"
+#include <atomic>
 
 using namespace jrtplib;
 
 namespace iRtp{
-
 
 JRtpSession::JRtpSession():m_nPayloadType(0),m_nCurPts(0)
 {
@@ -64,6 +63,8 @@ bool JRtpSession::Start()
 
 int JRtpSession::SendData(const uint8_t *buf, int len, uint32_t pts, uint64_t marker)
 {
+    //std::cout<<LOG_FIXED_HEADER()<<std::endl;
+
     uint32_t incPts=pts-m_nCurPts;
     m_nCurPts=pts;
 

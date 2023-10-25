@@ -4,8 +4,10 @@ project(IRtp)
 set(CMAKE_CXX_STANDARD 11)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pthread")
+set(CMAKE_LIBRARY_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-as-needed")
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-option(LIB_MODE "build a library" OFF)
+option(LIB_MODE "build a library" ON)
 option(ENABLE_TESTER "run tester" ON)
 
 
@@ -116,38 +118,96 @@ SET(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 
 function(run_tester)
-    add_library(irtp_a STATIC IMPORTED)
+    MESSAGE(STATUS "run_tester")
+    add_library(irtp_a STATIC IMPORTED GLOBAL)
     set_target_properties(irtp_a PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/libIRtp-static.a")
     set(IRTP_LIBS irtp_a)
 
     add_executable(${CMAKE_PROJECT_NAME} main.cpp)
     target_link_libraries(${CMAKE_PROJECT_NAME}  PUBLIC ${IRTP_LIBS})
-    target_link_libraries(${CMAKE_PROJECT_NAME}  PUBLIC bcunit  mbedtls bctoolbox)
-    target_link_libraries(${CMAKE_PROJECT_NAME} PUBLIC jrtp jthread)
-    add_dependencies(${CMAKE_PROJECT_NAME} ${LIB_TARGET})
+#    target_link_libraries(${CMAKE_PROJECT_NAME}  PUBLIC bcunit  mbedtls bctoolbox)
+#    target_link_libraries(${CMAKE_PROJECT_NAME} PUBLIC jrtp jthread)
+    add_dependencies(${CMAKE_PROJECT_NAME} ${IRTP_PUBLIC_TARGET})
 endfunction(run_tester)
 
 
 if(LIB_MODE)
     MESSAGE(STATUS "enable lib mode")
-    set(LIB_TARGET "IRtp-static")
-    add_library(${LIB_TARGET} STATIC ${ALL_SRCS})
-    set_target_properties(${LIB_TARGET} PROPERTIES OUTPUT_NAME ${LIB_TARGET})
-    #    set_target_properties(${LIB_TARGET} PROPERTIES CLEAN_DIRECT_OUTPUT 1)
-    #    set_target_properties(${LIB_TARGET} PROPERTIES VERSION 1.0)
-    set_target_properties(${LIB_TARGET} PROPERTIES IMPORTED TRUE INTERFACE_LINK_LIBRARIES "")
-    target_link_libraries(${LIB_TARGET} PRIVATE bcunit  mbedtls bctoolbox)
-    target_link_libraries(${LIB_TARGET}  PRIVATE jrtp jthread)
+    set(IRTP_PUBLIC_TARGET "IRtp-static")
+    set(IRTP_PRIVATE_TARGET "temp_IRtp-static")
+    add_library(${IRTP_PRIVATE_TARGET} STATIC ${ALL_SRCS})
+    set_target_properties(${IRTP_PRIVATE_TARGET} PROPERTIES OUTPUT_NAME ${IRTP_PRIVATE_TARGET})
+#    #    set_target_properties(${LIB_TARGET} PROPERTIES CLEAN_DIRECT_OUTPUT 1)
+#    #    set_target_properties(${LIB_TARGET} PROPERTIES VERSION 1.0)
+    set_target_properties(${IRTP_PRIVATE_TARGET} PROPERTIES IMPORTED TRUE INTERFACE_LINK_LIBRARIES "")
+    set_target_properties(${IRTP_PRIVATE_TARGET} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+#    target_link_libraries(${LIB_TARGET} PRIVATE bcunit  mbedtls bctoolbox)
+#    target_link_libraries(${LIB_TARGET}  PRIVATE jrtp jthread)
 
-#    add_dependencies(${LIB_TARGET} bcunit  mbedtls bctoolbox)
-#    add_custom_command(
-#            TARGET ${LIB_TARGET}
-#            POST_BUILD
-#            COMMAND ${CMAKE_AR} -x libbcunit.a
-#            COMMAND ${CMAKE_AR} -x libmbedtls.a
-#            COMMAND ${CMAKE_AR} -x libbctoolbox.a
-#            COMMAND ${CMAKE_AR} -rcs $<TARGET_FILE:${LIB_TARGET}> $<TARGET_OBJECTS:bcunit> $<TARGET_OBJECTS:mbedtls> $<TARGET_OBJECTS:bctoolbox>
-#    )
+
+    #-------------------------get lib whole path-----------------------
+    find_library(BCUNIT_LIBRARY NAMES bcunit)
+    if(NOT BCUNIT_LIBRARY)
+        message(FATAL_ERROR "it can not find bcunit lib")
+    else()
+        message(STATUS "found ${BCUNIT_LIBRARY}")
+    endif()
+
+    find_library(MBEDTLS_LIBRARY NAMES mbedtls)
+    if(NOT MBEDTLS_LIBRARY)
+        message(FATAL_ERROR "it can not find mbedtls lib")
+        else()
+        message(STATUS "found ${MBEDTLS_LIBRARY}")
+    endif()
+
+    find_library(BCTOOLBOX_LIBRARY NAMES bctoolbox)
+    if(NOT BCTOOLBOX_LIBRARY)
+        message(FATAL_ERROR "it can not find bctoolbox lib ")
+    else()
+        message(STATUS "found ${BCTOOLBOX_LIBRARY}")
+    endif()
+
+    find_library(JTHREAD_LIBRARY NAMES jthread)
+    if(NOT JTHREAD_LIBRARY)
+        message(FATAL_ERROR "it can not jthread lib")
+    else()
+        message(STATUS "found ${JTHREAD_LIBRARY}")
+    endif()
+
+    find_library(JRTP_LIBRARY NAMES jrtp)
+    if(NOT JRTP_LIBRARY)
+        message(FATAL_ERROR "it can not jrtp lib")
+    else()
+        message(STATUS "found ${JRTP_LIBRARY}")
+    endif()
+
+
+    add_library(bcunit_static STATIC IMPORTED GLOBAL)
+    set_target_properties(bcunit_static PROPERTIES IMPORTED_LOCATION "${BCUNIT_LIBRARY}")
+
+    add_library(mbedtls_static STATIC IMPORTED GLOBAL)
+    set_target_properties(mbedtls_static PROPERTIES IMPORTED_LOCATION "${MBEDTLS_LIBRARY}")
+
+    add_library(bctoolbox_static STATIC IMPORTED GLOBAL)
+    set_target_properties(bctoolbox_static PROPERTIES IMPORTED_LOCATION "${BCTOOLBOX_LIBRARY}")
+
+    add_library(jrtp_static STATIC IMPORTED GLOBAL)
+    set_target_properties(jrtp_static PROPERTIES IMPORTED_LOCATION "${JRTP_LIBRARY}")
+
+    add_library(jthread_static STATIC IMPORTED GLOBAL)
+    set_target_properties(jthread_static PROPERTIES IMPORTED_LOCATION "${JTHREAD_LIBRARY}")
+
+    add_custom_target(${IRTP_PUBLIC_TARGET} ALL DEPENDS lib${IRTP_PUBLIC_TARGET}.a)
+    set_target_properties(${IRTP_PUBLIC_TARGET} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+    add_custom_command(
+            OUTPUT lib${IRTP_PUBLIC_TARGET}.a
+            COMMAND ar crsT lib${IRTP_PUBLIC_TARGET}.a $<TARGET_FILE:bcunit_static> $<TARGET_FILE:mbedtls_static>
+            $<TARGET_FILE:bctoolbox_static> $<TARGET_FILE:${IRTP_PRIVATE_TARGET}> $<TARGET_FILE:jrtp_static>
+            $<TARGET_FILE:jthread_static>
+            DEPENDS bcunit_static mbedtls_static bctoolbox_static ${IRTP_PRIVATE_TARGET} jrtp_static jthread_static
+    )
+    
     IF(ENABLE_TESTER)
         run_tester()
     ENDIF()

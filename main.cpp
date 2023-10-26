@@ -29,45 +29,30 @@ int rcvCb(const uint8_t* buf,int len,int marker,void* user)
 }
 
 //test ortp lib and as a example
-int testOrtp(const std::string& lIp="",int lPort=-1,const std::string& rIp="",int rPort=-1)
+int testORtp(const std::string& lIp="",int lPort=-1,const std::string& rIp="",int rPort=-1)
 {
+    std::cout<<"Start ortp test"<<std::endl;
+
     iRtp::RtpSessionMpl* pSession=new iRtp::ORtpSession;
     assert(pSession);
 
-    iRtp::RtpSessionInitData initData{"172.22.1.100","172.22.1.254",60000,6666,96,90000};
+    iRtp::RtpSessionInitData initData{lIp,rIp,lPort,rPort,96,90000};
     if(!pSession->Init(&initData) || !pSession->Start()){
         std::cout<<LOG_FIXED_HEADER()<<" Try to init rtpSession but fail"<<std::endl;
         delete pSession;
         return -1;
     }
 
-    int repeat=10;
-    uint8_t buf[]={0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09};
+    int repeat=9;
+    uint8_t buf[]={0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x10,0x11,0x12,0x13,0x14,0x15,0x16,0x17,0x18,0x19,0x20};
     while (repeat--){
-        int len=pSession->SendData(buf,sizeof(buf),0,0);
+        int len=pSession->SendData(buf,sizeof(buf)-repeat,0);
     }
 
     const int rcvLen=1024;
     uint8_t rcvBuf[rcvLen];
     while(!stopFlag){
-        int have_more=1;
-        int totalLen=0;
-        while (have_more && !stopFlag){
-            int len=pSession->RcvData(rcvBuf+totalLen,rcvLen-totalLen,0,rcvCb,nullptr);
-            if(len<=0){
-                std::cout<<LOG_FIXED_HEADER()<<"Receiving data fails this time.len= "<<len<<std::endl;
-                continue;
-            }
-            totalLen+=len;
-            if(totalLen>=rcvLen)break;
-        }
-
-        //receive handler
-        if(totalLen>0){
-            std::cout<<"Receiving data whose length is "<<totalLen<<std::endl;
-            totalLen=0;
-        }
-
+        pSession->RcvPayloadData(rcvBuf,rcvLen,rcvCb,nullptr);
         sleep(1);
     }
 
@@ -153,6 +138,9 @@ int testOrtp(const std::string& lIp="",int lPort=-1,const std::string& rIp="",in
 
 int testJRtp(const std::string& lIp="",int lPort=-1,const std::string& rIp="",int rPort=-1)
 {
+
+    std::cout<<"Start jrtp test"<<std::endl;
+
     iRtp::RtpSessionMpl* pSession=new iRtp::JRtpSession;
     assert(pSession);
 
@@ -163,16 +151,17 @@ int testJRtp(const std::string& lIp="",int lPort=-1,const std::string& rIp="",in
         return -1;
     }
 
-    int repeat=10;
-    uint8_t buf[]={0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09};
+    int repeat=9;
+    uint8_t buf[]={0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x10,0x11,0x12,0x13,0x14,0x15,0x16,0x17,0x18,0x19,0x20};
     while (repeat--){
-        int len=pSession->SendData(buf,sizeof(buf),0,0);
+        int len=pSession->SendData(buf,sizeof(buf)-repeat,0);
     }
 
     const int rcvLen=1024;
     uint8_t rcvBuf[rcvLen];
     while (!stopFlag){
-        pSession->RcvData(rcvBuf,rcvLen,0, rcvCb,nullptr);
+//        pSession->RcvData(rcvBuf,rcvLen,rcvCb,nullptr);
+        pSession->RcvPayloadData(rcvBuf,rcvLen,rcvCb,nullptr);
         sleep(1);
     }
 
@@ -194,12 +183,14 @@ int main(int agrc,char* agrv[])
     signal(SIGKILL,signalHandler);
 
     //default a param(whole path for executive)
-    if(agrc<=1)  return testOrtp();
+    if(agrc<=1)  return testORtp();
 
     std::string lip;
     std::string rip;
     int lport=-1;
     int rport=-1;
+
+    int option=0;
 
     for(int i=1; i<agrc; i++){
         char* arg=agrv[i];
@@ -222,6 +213,8 @@ int main(int agrc,char* agrv[])
             rip=value;
         }else if(key=="remoteport"){
             rport= atoi(value.data());
+        }else if(key=="option"){
+            option= atoi(value.data());
         }else{
             std::cout<<"unknown key="<<arg<<std::endl;
             return -1;
@@ -229,8 +222,7 @@ int main(int agrc,char* agrv[])
 
     }
 
-    return testJRtp(lip,lport,rip,rport);
-
+    return option==0 ? testORtp(lip,lport,rip,rport) : testJRtp(lip,lport,rip,rport);
 
 
 }

@@ -10,6 +10,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 option(LIB_MODE "build a library" ON)
 option(ENABLE_TESTER "run tester" ON)
 
+message(STATUS "INSTALL_INCLUDE_DIR=${CMAKE_INSTALL_INCLUDEDIR}")
 
 #-------------------------compile ortp---------------------------
 find_package(BcUnit QUIET)
@@ -68,6 +69,7 @@ set(ORTP ORtp)
 add_subdirectory(${ORTP})
 add_definitions(-DHAVE_CONFIG_H)
 include_directories(${ORTP_HEADERS})
+
 
 #--------------------IRtp-------------------------
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/irtp)

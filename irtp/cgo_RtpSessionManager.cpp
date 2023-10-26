@@ -91,12 +91,17 @@ bool StopRtpSession(CRtpSessionManager* p)
 {
     return CheckRtpSessionMgrPointer(p) && p->pIml->Stop();
 }
-int SendDataRtpSession(CRtpSessionManager* p,const uint8_t* buf,int len,uint32_t pts,uint64_t marker)
+int SendDataWithTsRtpSession(CRtpSessionManager* p,const uint8_t* buf,int len,uint32_t pts,uint64_t marker)
 {
 //    std::cout<<LOG_FIXED_HEADER()<<std::endl;
-    return CheckRtpSessionMgrPointer(p) && p->pIml->SendData(buf,len,pts,marker);
+    return CheckRtpSessionMgrPointer(p) && p->pIml->SendDataWithTs(buf,len,pts,marker);
 }
-int RcvDataRtpSession(CRtpSessionManager* p,uint8_t* buf,int len,uint32_t ts,CRcvCb rcvCb,void* user)
+int SendDataRtpSession(CRtpSessionManager* p,const uint8_t* buf,int len,uint16_t marker)
+{
+    return CheckRtpSessionMgrPointer(p) && p->pIml->SendData(buf,len,marker);
+}
+
+int RcvDataWithRtpSession(CRtpSessionManager* p,uint8_t* buf,int len,uint32_t ts,CRcvCb rcvCb,void* user)
 {
 //    RcvCb fp=(RcvCb)(rcvCb);
 //   if(!fp){
@@ -104,8 +109,12 @@ int RcvDataRtpSession(CRtpSessionManager* p,uint8_t* buf,int len,uint32_t ts,CRc
 //       return -1;
 //   }
 
-   return CheckRtpSessionMgrPointer(p) && p->pIml->RcvData(buf,len,ts,rcvCb,user);
+   return CheckRtpSessionMgrPointer(p) && p->pIml->RcvDataWithTs(buf,len,ts,rcvCb,user);
+}
 
+int RcvDataRtpSession(CRtpSessionManager* p,uint8_t* buf,int len,CRcvCb rcvCb,void* user)
+{
+    return CheckRtpSessionMgrPointer(p) && p->pIml->RcvData(buf,len,rcvCb,user);
 }
 
 
@@ -133,7 +142,19 @@ void DestroyRtpSessionInitData(CRtpSessionInitData* pi)
     }
 
     delete pi;
-
-
-
 }
+
+
+uint32_t GetTimeStamp(void* p){return ((CRtpSessionManager*)(p))->pIml->GetRtpHeaderData().ts;}
+uint16_t GetSequenceNumber(void* p){ return ((CRtpSessionManager*)(p))->pIml->GetRtpHeaderData().seq;}
+uint32_t GetSsrc(void* p){return ((CRtpSessionManager*)(p))->pIml->GetRtpHeaderData().ssrc;}
+uint32_t* GetCsrc(void* p){return (uint32_t*) ((CRtpSessionManager*)(p))->pIml->GetRtpHeaderData().csrc;}
+uint16_t GetPayloadType(void* p){return ((CRtpSessionManager*)(p))->pIml->GetRtpHeaderData().pt;}
+bool     GetMarker(void* p){return ((CRtpSessionManager*)(p))->pIml->GetRtpHeaderData().marker;}
+uint8_t  GetVersion(void* p){return ((CRtpSessionManager*)(p))->pIml->GetRtpHeaderData().version;}
+bool     GetPadding(void* p){return ((CRtpSessionManager*)(p))->pIml->GetRtpHeaderData().padding;}
+bool     GetExtension(void* p){return ((CRtpSessionManager*)(p))->pIml->GetRtpHeaderData().extension;}
+uint8_t  GetCC(void* p){return ((CRtpSessionManager*)(p))->pIml->GetRtpHeaderData().cc;}
+
+
+

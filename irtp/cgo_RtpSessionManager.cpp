@@ -68,7 +68,6 @@ void DestroyRtpSession(CRtpSessionManager* p)
 
     delete p;
 
-
 }
 bool InitRtpSession(CRtpSessionManager* p,CRtpSessionInitData* pInitData)
 {
@@ -77,7 +76,7 @@ bool InitRtpSession(CRtpSessionManager* p,CRtpSessionInitData* pInitData)
         return false;
     }
 
-    std::cout<<LOG_FIXED_HEADER()<<":"<<pInitData->localIp<<":"<<pInitData->localPort<<std::endl;
+    //std::cout<<LOG_FIXED_HEADER()<<":"<<pInitData->localIp<<":"<<pInitData->localPort<<std::endl;
 
     return p->pIml->Init(pInitData);
 
@@ -91,7 +90,7 @@ bool StopRtpSession(CRtpSessionManager* p)
 {
     return CheckRtpSessionMgrPointer(p) && p->pIml->Stop();
 }
-int SendDataWithTsRtpSession(CRtpSessionManager* p,const uint8_t* buf,int len,uint32_t pts,uint64_t marker)
+int SendDataWithTsRtpSession(CRtpSessionManager* p,const uint8_t* buf,int len,uint32_t pts,uint16_t marker)
 {
 //    std::cout<<LOG_FIXED_HEADER()<<std::endl;
     return CheckRtpSessionMgrPointer(p) && p->pIml->SendDataWithTs(buf,len,pts,marker);
@@ -101,7 +100,7 @@ int SendDataRtpSession(CRtpSessionManager* p,const uint8_t* buf,int len,uint16_t
     return CheckRtpSessionMgrPointer(p) && p->pIml->SendData(buf,len,marker);
 }
 
-int RcvDataWithRtpSession(CRtpSessionManager* p,uint8_t* buf,int len,uint32_t ts,CRcvCb rcvCb,void* user)
+int RcvDataWithTsRtpSession(CRtpSessionManager* p,uint8_t* buf,int len,uint32_t ts,CRcvCb rcvCb,void* user)
 {
 //    RcvCb fp=(RcvCb)(rcvCb);
 //   if(!fp){
@@ -145,6 +144,15 @@ void DestroyRtpSessionInitData(CRtpSessionInitData* pi)
 }
 
 
+//static inline RtpSessionMpl* GetRtpSessionMpl(void* p){
+//    CRtpSessionManager* pm=static_cast<CRtpSessionManager*>(p);
+//    if(pm==nullptr){
+//        std::cout<<LOG_FIXED_HEADER()<<" invalid pointer"<<std::endl;
+//        return nullptr;
+//    }
+//    return pm->pIml;
+//}
+
 uint32_t GetTimeStamp(void* p){return ((CRtpSessionManager*)(p))->pIml->GetRtpHeaderData().ts;}
 uint16_t GetSequenceNumber(void* p){ return ((CRtpSessionManager*)(p))->pIml->GetRtpHeaderData().seq;}
 uint32_t GetSsrc(void* p){return ((CRtpSessionManager*)(p))->pIml->GetRtpHeaderData().ssrc;}
@@ -157,4 +165,12 @@ bool     GetExtension(void* p){return ((CRtpSessionManager*)(p))->pIml->GetRtpHe
 uint8_t  GetCC(void* p){return ((CRtpSessionManager*)(p))->pIml->GetRtpHeaderData().cc;}
 
 
+//for rtcp
+//inline uint8_t* GetPacketData(void* p,void* rtcpPacket){return ((CRtpSessionManager*)(p))->pIml->GetPacketData(rtcpPacket);}
+//inline int GetPacketDataLength(void* p);
+//inline uint8_t* GetAppData(void* p);
+//inline int GetAppDataLength(void* rtcpPacket);
+//inline uint8_t* GetAppName(void* rtcpPacket);
+//inline uint32_t GetAppSsrc(void* rtcpPacket);
+//inline uint8_t GetAppSubType(void* rtcpPacket);
 

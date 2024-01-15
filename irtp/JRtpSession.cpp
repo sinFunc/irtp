@@ -3,37 +3,191 @@
 //
 #include "JRtpSession.h"
 #include <atomic>
+#include "rtpsession.h"
+#include "rtpudpv4transmitter.h"
+#include "rtpsessionparams.h"
+#include "rtpipv4address.h"
+#include "rtppacket.h"
+#include "rtptimeutilities.h"
+#include "rtcpapppacket.h"
+
 
 using namespace jrtplib;
 
 namespace iRtp{
 
+//reDefined JRtp classes
+class JRtpSessionImpl:public RTPSession{
+public:
+    JRtpSessionImpl(JRtpSession* p):m_pRefJRtpSession(p){}
+
+    /** Is called when an incoming RTP packet is about to be processed.
+	 *  Is called when an incoming RTP packet is about to be processed. This is _not_
+	 *  a good function to process an RTP packet in, in case you want to avoid iterating
+	 *  over the sources using the GotoFirst/GotoNext functions. In that case, the
+	 *  RTPSession::OnValidatedRTPPacket function should be used.
+	 */
+    virtual void OnRTPPacket(RTPPacket *pack,const RTPTime &receivetime, const RTPAddress *senderaddress){
+//        std::cout<<LOG_FIXED_HEADER()<<"receive rtp packet"<<std::endl;
+    }
+
+    /** Is called when an incoming RTCP packet is about to be processed. */
+    virtual void OnRTCPCompoundPacket(RTCPCompoundPacket *pack,const RTPTime &receivetime,
+                                      const RTPAddress *senderaddress){
+        std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
+    }
+
+    /** Is called when an SSRC collision was detected.
+     *  Is called when an SSRC collision was detected. The instance \c srcdat is the one present in
+     *  the table, the address \c senderaddress is the one that collided with one of the addresses
+     *  and \c isrtp indicates against which address of \c srcdat the check failed.
+     */
+    virtual void OnSSRCCollision(RTPSourceData *srcdat,const RTPAddress *senderaddress,bool isrtp){
+        std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
+    }
+
+    /** Is called when another CNAME was received than the one already present for source \c srcdat. */
+    virtual void OnCNAMECollision(RTPSourceData *srcdat,const RTPAddress *senderaddress,
+                                  const uint8_t *cname,size_t cnamelength){
+        std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
+    }
+
+    /** Is called when a new entry \c srcdat is added to the source table. */
+    virtual void OnNewSource(RTPSourceData *srcdat){
+        std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
+    }
+
+    /** Is called when the entry \c srcdat is about to be deleted from the source table. */
+    virtual void OnRemoveSource(RTPSourceData *srcdat){
+        std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
+    }
+
+    /** Is called when participant \c srcdat is timed out. */
+    virtual void OnTimeout(RTPSourceData *srcdat){
+        std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
+    }
+
+    /** Is called when participant \c srcdat is timed after having sent a BYE packet. */
+    virtual void OnBYETimeout(RTPSourceData *srcdat){
+        std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
+    }
+
+    /** Is called when an RTCP APP packet \c apppacket has been received at time \c receivetime
+     *  from address \c senderaddress.
+     */
+    virtual void OnAPPPacket(RTCPAPPPacket *apppacket,const RTPTime &receivetime,
+                             const RTPAddress *senderaddress){
+        RtcpRcvCbData* p=m_pRefJRtpSession->GetRtcpRcvCbData(RTCP_PACKET_APP);
+        if(!p->cb){ //ignore
+            return;
+        }
+
+        RtcpAppPacket d;
+        d.appData=apppacket->GetAPPData();
+        d.appDataLen=apppacket->GetAPPDataLength();
+        d.name=apppacket->GetName();
+        d.ssrc=apppacket->GetSSRC();
+        d.subType=apppacket->GetSubType();
+
+        p->cb(&d,p->user);
+
+        std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
+    }
+
+    /** Is called when an unknown RTCP packet type was detected. */
+    virtual void OnUnknownPacketType(RTCPPacket *rtcppack,const RTPTime &receivetime,
+                                     const RTPAddress *senderaddress){
+        std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
+    }
+
+    /** Is called when an unknown packet format for a known packet type was detected. */
+    virtual void OnUnknownPacketFormat(RTCPPacket *rtcppack,const RTPTime &receivetime,
+                                       const RTPAddress *senderaddress){
+        std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
+    }
+
+    /** Is called when the SDES NOTE item for source \c srcdat has been timed out. */
+    virtual void OnNoteTimeout(RTPSourceData *srcdat){
+        std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
+    }
+
+    /** Is called when an RTCP sender report has been processed for this source. */
+    virtual void OnRTCPSenderReport(RTPSourceData *srcdat){
+        std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
+
+    }
+
+    /** Is called when an RTCP receiver report has been processed for this source. */
+    virtual void OnRTCPReceiverReport(RTPSourceData *srcdat){
+        std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
+    }
+
+    /** Is called when a specific SDES item was received for this source. */
+    virtual void OnRTCPSDESItem(RTPSourceData *srcdat, RTCPSDESPacket::ItemType t,
+                                const void *itemdata, size_t itemlength){
+        std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
+    }
+
+    /** Is called when a BYE packet has been processed for source \c srcdat. */
+    virtual void OnBYEPacket(RTPSourceData *srcdat){
+        std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
+    }
+
+    /** Is called when an RTCP compound packet has just been sent (useful to inspect outgoing RTCP data). */
+    virtual void OnSendRTCPCompoundPacket(RTCPCompoundPacket *pack){
+        //std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
+    }
+
+private:
+    JRtpSession*    m_pRefJRtpSession;
+
+
+};
+
+class JRTPSessionParams:public RTPSessionParams{};
+class JRTPUDPv4TransmissionParams:public RTPUDPv4TransmissionParams{};
+
+
 JRtpSession::JRtpSession():m_nPayloadType(0),m_nCurPts(0),m_nSndIncTs(0)
+    ,m_pRtpSessionImpl(nullptr),m_pSessParams(nullptr),m_pTransParams(nullptr)
 {
-
-
-
-
 
 
 }
 
 JRtpSession::~JRtpSession()
 {
-
+    if(m_pRtpSessionImpl){
+        delete m_pRtpSessionImpl;
+        m_pRtpSessionImpl=nullptr;
+    }
+    if(m_pSessParams){
+        delete m_pSessParams;
+        m_pSessParams=nullptr;
+    }
+    if(m_pTransParams){
+        delete m_pTransParams;
+        m_pTransParams=nullptr;
+    }
 
 }
 
 bool JRtpSession::Init(const RtpSessionInitData *pInitData)
 {
 
+    m_pTransParams=new JRTPUDPv4TransmissionParams();
     unsigned long localIp=ntohl(inet_addr(pInitData->localIp.data()));
-    m_transParams.SetBindIP(localIp);
-    m_transParams.SetPortbase(pInitData->localPort);
+    const int  bufSize=2*1024*1024;
+    m_pTransParams->SetBindIP(localIp);
+    m_pTransParams->SetPortbase(pInitData->localPort);
+    m_pTransParams->SetRTPReceiveBuffer(bufSize);
 
-    m_sessParams.SetOwnTimestampUnit(1/pInitData->clockRate);
+    m_pSessParams=new JRTPSessionParams();
+    m_pSessParams->SetOwnTimestampUnit(1/pInitData->clockRate);
 
-    int status=m_rtpSession.Create(m_sessParams,&m_transParams);
+
+    m_pRtpSessionImpl=new JRtpSessionImpl(this);
+    int status= m_pRtpSessionImpl->Create(*m_pSessParams,m_pTransParams);
     if(status<0){
         std::cerr<<LOG_FIXED_HEADER()<<RTPGetErrorString(status)<<std::endl;
         return -1;
@@ -41,17 +195,34 @@ bool JRtpSession::Init(const RtpSessionInitData *pInitData)
 
     unsigned long remoteIp=ntohl(inet_addr(pInitData->remoteIp.data()));
     RTPIPv4Address addr(remoteIp,pInitData->remotePort);
-    status=m_rtpSession.AddDestination(addr);
+    status=m_pRtpSessionImpl->AddDestination(addr);
     if(status<0){
         std::cerr<<LOG_FIXED_HEADER()<<RTPGetErrorString(status)<<std::endl;
         return -1;
     }
 
-    m_rtpSession.SetDefaultMark(false);
-    m_rtpSession.SetDefaultPayloadType(pInitData->payloadType);
+    m_pRtpSessionImpl->SetDefaultMark(false);
+    m_pRtpSessionImpl->SetDefaultPayloadType(pInitData->payloadType);
+
+    //set extra params
+    auto e=pInitData->GetExtraParamsMap();
+    for(auto itr=e.begin();itr!=e.end();++itr){
+        const std::string& k=(*itr).first;
+        if(k==std::string("receiveBufferSize")){
+            int s=atoi((*itr).second.data());
+            if(s<=0){
+                std::cout<<LOG_FIXED_HEADER()<<" The size of receiveBufSize expected is invalid."<<std::endl;
+            } else{
+                m_pTransParams->SetRTPReceiveBuffer(s);
+            }
+        }else{
+            std::cout<<LOG_FIXED_HEADER()<<" It does not support the key="<<k<<std::endl;
+        }
+
+    }
 
     m_nPayloadType=pInitData->payloadType;
-    m_nSndIncTs=pInitData->clockRate/25;
+    m_nSndIncTs=pInitData->clockRate/pInitData->fps;
 
     return true;
 }
@@ -68,62 +239,79 @@ int JRtpSession::SendDataWithTs(const uint8_t *buf, int len, uint32_t pts, uint1
     uint32_t incPts= pts>m_nCurPts ? pts-m_nCurPts : 0;
     m_nCurPts=pts; //caller should make sure that pts dont exceed UINT32_MAX
 
-    return m_rtpSession.SendPacket(buf,len,m_nPayloadType,marker,incPts);
+    //std::cout<<LOG_FIXED_HEADER()<<"pts="<<pts<<";incPts="<<incPts<<std::endl;
+
+    return m_pRtpSessionImpl->SendPacket(buf,len,m_nPayloadType,marker,incPts);
+
+
+//    if(marker){
+//        uint32_t incPts= pts>m_nCurPts ? pts-m_nCurPts : 0 ;
+//        m_nCurPts=pts; //caller should make sure that pts dont exceed UINT32_MAX
+//
+//
+//
+//    }
+
+//    return m_pRtpSessionImpl->SendPacket(buf,len,m_nPayloadType,marker,0);
+
+
+
 
 }
 
 int JRtpSession::SendData(const uint8_t *buf, int len, uint16_t marker)
 {
-    //dont send immediately
-//    m_rtpSession.SetDefaultMark(marker!=0);
-//    return m_rtpSession.SendPacket(buf,len);
-    return SendDataWithTs(buf,len,m_nSndIncTs,marker);
+    uint32_t incPts= marker ? m_nSndIncTs : 0 ;
+
+    m_pRtpSessionImpl->SetDefaultTimestampIncrement(incPts);
+    m_pRtpSessionImpl->SetDefaultMark(marker);
+
+    return m_pRtpSessionImpl->SendPacket(buf,len);
 
 }
 
-
 int JRtpSession::RcvPayloadData(uint8_t *buf, int len, RcvCb rcvCb, void *user)
 {
-    m_rtpSession.BeginDataAccess();
-    if(m_rtpSession.GotoFirstSource()){
+    m_pRtpSessionImpl->BeginDataAccess();
+    if(m_pRtpSessionImpl->GotoFirstSource()){
         do{
             RTPPacket* pkt;
-            while ((pkt=m_rtpSession.GetNextPacket())!=0 && !m_bStopFlag){
+            while ((pkt=m_pRtpSessionImpl->GetNextPacket())!=0 && !m_bStopFlag){
 //                std::cout<<"Got packet with "
 //                         << "sequence number="<<pkt->GetExtendedSequenceNumber()
 //                         <<" from SSRC "<<pkt->GetSSRC()
 //                         <<std::endl;
                 __updateRtpHeaderData(pkt);
                 rcvCb(pkt->GetPayloadData(),pkt->GetPayloadLength(),pkt->HasMarker(),user);
-                m_rtpSession.DeletePacket(pkt);
+                m_pRtpSessionImpl->DeletePacket(pkt);
             }
 
-        }while(m_rtpSession.GotoNextSource() && !m_bStopFlag);
+        }while(m_pRtpSessionImpl->GotoNextSource() && !m_bStopFlag);
     }
-    m_rtpSession.EndDataAccess();
+    m_pRtpSessionImpl->EndDataAccess();
 
     return 0;
 }
 
 int JRtpSession::RcvData(uint8_t *buf, int len, RcvCb rcvCb, void *user)
 {
-    m_rtpSession.BeginDataAccess();
-    if(m_rtpSession.GotoFirstSource()){
+    m_pRtpSessionImpl->BeginDataAccess();
+    if(m_pRtpSessionImpl->GotoFirstSource()){
         do{
             RTPPacket* pkt;
-            while ((pkt=m_rtpSession.GetNextPacket())!=0 && !m_bStopFlag){
+            while ((pkt=m_pRtpSessionImpl->GetNextPacket())!=0 && !m_bStopFlag){
 //                std::cout<<"Got packet with "
 //                         << "sequence number="<<pkt->GetExtendedSequenceNumber()
 //                         <<" from SSRC "<<pkt->GetSSRC()
 //                         <<std::endl;
                 __updateRtpHeaderData(pkt);
                 rcvCb(pkt->GetPacketData(),pkt->GetPacketLength(),pkt->HasMarker(),user);
-                m_rtpSession.DeletePacket(pkt);
+                m_pRtpSessionImpl->DeletePacket(pkt);
             }
 
-        }while(m_rtpSession.GotoNextSource() && !m_bStopFlag);
+        }while(m_pRtpSessionImpl->GotoNextSource() && !m_bStopFlag);
     }
-    m_rtpSession.EndDataAccess();
+    m_pRtpSessionImpl->EndDataAccess();
 
     return 0;
 
@@ -137,15 +325,23 @@ int JRtpSession::RcvDataWithTs(uint8_t *buf, int len, uint32_t ts,RcvCb rcvCb,vo
 
 bool JRtpSession::Stop()
 {
+
+
     m_bStopFlag=true;
-    m_rtpSession.BYEDestroy(0,"time is up",10);
+    m_pRtpSessionImpl->BYEDestroy(0,"time is up",10);
     return true;
 }
 
 
 
-void JRtpSession::__updateRtpHeaderData(jrtplib::RTPPacket* p)
+void JRtpSession::__updateRtpHeaderData(void* p1)
 {
+    RTPPacket* p=static_cast<RTPPacket*>(p1);
+    if(!p){
+        std::cout<<LOG_FIXED_HEADER()<<"RtpHeader data is unuseful because the pointer data is invalid."<<std::endl;
+        return;
+    }
+
     m_rtpHeaderData.pt=p->GetPayloadType();
     m_rtpHeaderData.marker=p->HasMarker();
     m_rtpHeaderData.ssrc=p->GetSSRC();
@@ -161,6 +357,14 @@ void JRtpSession::__updateRtpHeaderData(jrtplib::RTPPacket* p)
     m_rtpHeaderData.padding=0;
 
 }
+
+
+int JRtpSession::SendRtcpAppData(uint8_t subType, const uint8_t *name, const void *appData, int appDataLen)
+{
+    return m_pRtpSessionImpl->SendRTCPAPPPacket(subType,name,appData,appDataLen);
+
+}
+
 
 
 

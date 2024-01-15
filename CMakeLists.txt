@@ -7,7 +7,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pthread")
 set(CMAKE_LIBRARY_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-as-needed")
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-option(LIB_MODE "build a library" ON)
+option(LIB_MODE "build a library" OFF)
 option(ENABLE_TESTER "run tester" ON)
 
 message(STATUS "INSTALL_INCLUDE_DIR=${CMAKE_INSTALL_INCLUDEDIR}")
@@ -116,7 +116,7 @@ include_directories(${JRTP_INCLUDE_DIR})
 
 
 set(ALL_SRCS ${IRTP_SRCS} ${ORTP_SRCS})
-SET(CMAKE_POSITION_INDEPENDENT_CODE ON)
+#SET(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 
 function(run_tester)

@@ -10,6 +10,7 @@
 #include "rtppacket.h"
 #include "rtptimeutilities.h"
 #include "rtcpapppacket.h"
+#include "rtpinternalsourcedata.h"
 
 
 using namespace jrtplib;
@@ -32,10 +33,10 @@ public:
     }
 
     /** Is called when an incoming RTCP packet is about to be processed. */
-    virtual void OnRTCPCompoundPacket(RTCPCompoundPacket *pack,const RTPTime &receivetime,
-                                      const RTPAddress *senderaddress){
-        std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
-    }
+//    virtual void OnRTCPCompoundPacket(RTCPCompoundPacket *pack,const RTPTime &receivetime,
+//                                      const RTPAddress *senderaddress){
+//        //std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
+//    }
 
     /** Is called when an SSRC collision was detected.
      *  Is called when an SSRC collision was detected. The instance \c srcdat is the one present in
@@ -43,33 +44,33 @@ public:
      *  and \c isrtp indicates against which address of \c srcdat the check failed.
      */
     virtual void OnSSRCCollision(RTPSourceData *srcdat,const RTPAddress *senderaddress,bool isrtp){
-        std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
+        //std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
     }
 
     /** Is called when another CNAME was received than the one already present for source \c srcdat. */
     virtual void OnCNAMECollision(RTPSourceData *srcdat,const RTPAddress *senderaddress,
                                   const uint8_t *cname,size_t cnamelength){
-        std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
+        //std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
     }
 
     /** Is called when a new entry \c srcdat is added to the source table. */
     virtual void OnNewSource(RTPSourceData *srcdat){
-        std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
+        //std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
     }
 
     /** Is called when the entry \c srcdat is about to be deleted from the source table. */
     virtual void OnRemoveSource(RTPSourceData *srcdat){
-        std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
+        //std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
     }
 
     /** Is called when participant \c srcdat is timed out. */
     virtual void OnTimeout(RTPSourceData *srcdat){
-        std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
+        //std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
     }
 
     /** Is called when participant \c srcdat is timed after having sent a BYE packet. */
     virtual void OnBYETimeout(RTPSourceData *srcdat){
-        std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
+        //std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
     }
 
     /** Is called when an RTCP APP packet \c apppacket has been received at time \c receivetime
@@ -77,8 +78,8 @@ public:
      */
     virtual void OnAPPPacket(RTCPAPPPacket *apppacket,const RTPTime &receivetime,
                              const RTPAddress *senderaddress){
-        RtcpRcvCbData* p=m_pRefJRtpSession->GetRtcpRcvCbData(RTCP_PACKET_APP);
-        if(!p->cb){ //ignore
+        RtcpRcvCbData* p=m_pRefJRtpSession->GetRtcpRcvCbData(RtcpRcvCbData::APP_PACKET);
+        if(!p->cb){ //ignore.because it is not necessary for application layer
             return;
         }
 
@@ -91,46 +92,69 @@ public:
 
         p->cb(&d,p->user);
 
-        std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
+//        std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
     }
 
     /** Is called when an unknown RTCP packet type was detected. */
     virtual void OnUnknownPacketType(RTCPPacket *rtcppack,const RTPTime &receivetime,
                                      const RTPAddress *senderaddress){
-        std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
+        //std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
     }
 
     /** Is called when an unknown packet format for a known packet type was detected. */
     virtual void OnUnknownPacketFormat(RTCPPacket *rtcppack,const RTPTime &receivetime,
                                        const RTPAddress *senderaddress){
-        std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
+        //std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
     }
 
     /** Is called when the SDES NOTE item for source \c srcdat has been timed out. */
     virtual void OnNoteTimeout(RTPSourceData *srcdat){
-        std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
+        //std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
     }
 
     /** Is called when an RTCP sender report has been processed for this source. */
     virtual void OnRTCPSenderReport(RTPSourceData *srcdat){
-        std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
+        //std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
 
     }
 
     /** Is called when an RTCP receiver report has been processed for this source. */
     virtual void OnRTCPReceiverReport(RTPSourceData *srcdat){
-        std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
+//        std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
     }
 
     /** Is called when a specific SDES item was received for this source. */
+    //for one item in one chunk. get to know from rtpsources.cpp 464 lines
+    //srcdata is the type of RTPInternalSourceData(inherit from RTPSourceData) from rtpsources.cpp 709 lines
     virtual void OnRTCPSDESItem(RTPSourceData *srcdat, RTCPSDESPacket::ItemType t,
                                 const void *itemdata, size_t itemlength){
-        std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
+        RtcpRcvCbData* p=m_pRefJRtpSession->GetRtcpRcvCbData(RtcpRcvCbData::SDES_ITEM);
+        if(!p->cb){ //ignore.because it is not necessary for application layer
+            return;
+        }
+
+        RtcpSdesPacket d;
+        d.itemData=(uint8_t*)itemdata;
+        d.itemDataLen=itemlength;
+        d.itemType=(int)t;
+
+        p->cb(&d,p->user);
+
+//        std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
     }
+
+    /** Is called when a specific SDES item of 'private' type was received for this source. */
+    //for one item in one chunk. get to know from source code(rtpsources.cpp 464 lines)
+    //srcdata is the type of RTPInternalSourceData(inherit from RTPSourceData) from rtpsources.cpp 770 lines
+    virtual void OnRTCPSDESPrivateItem(RTPSourceData *srcdat, const void *prefixdata, size_t prefixlen,
+                                       const void *valuedata, size_t valuelen){
+
+    }
+
 
     /** Is called when a BYE packet has been processed for source \c srcdat. */
     virtual void OnBYEPacket(RTPSourceData *srcdat){
-        std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
+//        std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
     }
 
     /** Is called when an RTCP compound packet has just been sent (useful to inspect outgoing RTCP data). */
@@ -239,22 +263,11 @@ int JRtpSession::SendDataWithTs(const uint8_t *buf, int len, uint32_t pts, uint1
     uint32_t incPts= pts>m_nCurPts ? pts-m_nCurPts : 0;
     m_nCurPts=pts; //caller should make sure that pts dont exceed UINT32_MAX
 
+    if(incPts>0)m_pRtpSessionImpl->IncrementTimestamp(incPts); //work immediately
+
     //std::cout<<LOG_FIXED_HEADER()<<"pts="<<pts<<";incPts="<<incPts<<std::endl;
 
-    return m_pRtpSessionImpl->SendPacket(buf,len,m_nPayloadType,marker,incPts);
-
-
-//    if(marker){
-//        uint32_t incPts= pts>m_nCurPts ? pts-m_nCurPts : 0 ;
-//        m_nCurPts=pts; //caller should make sure that pts dont exceed UINT32_MAX
-//
-//
-//
-//    }
-
-//    return m_pRtpSessionImpl->SendPacket(buf,len,m_nPayloadType,marker,0);
-
-
+    return m_pRtpSessionImpl->SendPacket(buf,len,m_nPayloadType,marker,0);
 
 
 }
@@ -325,8 +338,6 @@ int JRtpSession::RcvDataWithTs(uint8_t *buf, int len, uint32_t ts,RcvCb rcvCb,vo
 
 bool JRtpSession::Stop()
 {
-
-
     m_bStopFlag=true;
     m_pRtpSessionImpl->BYEDestroy(0,"time is up",10);
     return true;

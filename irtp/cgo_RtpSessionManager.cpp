@@ -14,13 +14,14 @@ extern "C" {
 using namespace iRtp;
 
 
-struct CRtpSessionInitData : public RtpSessionInitData{
-
-};
+struct CRtpSessionInitData : public RtpSessionInitData{};
 
 struct CRtpSessionManager{
     RtpSessionMpl* pIml{nullptr};
 };
+
+struct CRtcpPacket :public RtcpPacket{};
+
 
 
 static inline bool CheckRtpSessionMgrPointer(CRtpSessionManager* p)
@@ -92,28 +93,43 @@ bool StopRtpSession(CRtpSessionManager* p)
 }
 int SendDataWithTsRtpSession(CRtpSessionManager* p,const uint8_t* buf,int len,uint32_t pts,uint16_t marker)
 {
-//    std::cout<<LOG_FIXED_HEADER()<<std::endl;
-    return CheckRtpSessionMgrPointer(p) && p->pIml->SendDataWithTs(buf,len,pts,marker);
+    return CheckRtpSessionMgrPointer(p) ? p->pIml->SendDataWithTs(buf,len,pts,marker) : 0 ;
 }
 int SendDataRtpSession(CRtpSessionManager* p,const uint8_t* buf,int len,uint16_t marker)
 {
-    return CheckRtpSessionMgrPointer(p) && p->pIml->SendData(buf,len,marker);
+    return CheckRtpSessionMgrPointer(p) ? p->pIml->SendData(buf,len,marker) : 0 ;
 }
 
 int RcvDataWithTsRtpSession(CRtpSessionManager* p,uint8_t* buf,int len,uint32_t ts,CRcvCb rcvCb,void* user)
 {
-//    RcvCb fp=(RcvCb)(rcvCb);
-//   if(!fp){
-//       std::cout<<LOG_FIXED_HEADER()<<":invalid function pointer."<<std::endl;
-//       return -1;
-//   }
 
-   return CheckRtpSessionMgrPointer(p) && p->pIml->RcvDataWithTs(buf,len,ts,rcvCb,user);
+   return CheckRtpSessionMgrPointer(p) ? p->pIml->RcvDataWithTs(buf,len,ts,rcvCb,user):0;
 }
 
 int RcvDataRtpSession(CRtpSessionManager* p,uint8_t* buf,int len,CRcvCb rcvCb,void* user)
 {
-    return CheckRtpSessionMgrPointer(p) && p->pIml->RcvData(buf,len,rcvCb,user);
+    return CheckRtpSessionMgrPointer(p) ? p->pIml->RcvData(buf,len,rcvCb,user) : 0;
+}
+
+bool RegisterRtcpRcvCb(CRtpSessionManager* p,int type,void* cb,void* user)
+{
+    if(type>=RtcpRcvCbData::SIZE){
+        std::cerr<<LOG_FIXED_HEADER()<<"The type is invalid."<<std::endl;
+        return false;
+    }
+
+    if(!cb){
+        std::cerr<<LOG_FIXED_HEADER()<<"The callback function is invalid."<<std::endl;
+        return false;
+    }
+    RtcpRcvCb pf=(RtcpRcvCb)(cb);
+    if(!pf){
+        std::cerr<<LOG_FIXED_HEADER()<<"The callback function pointer is invalid."<<std::endl;
+        return false;
+    }
+
+    return CheckRtpSessionMgrPointer(p) && p->pIml->RegisterRtcpRcvCb(type,pf,user);
+
 }
 
 
@@ -136,41 +152,162 @@ CRtpSessionInitData* CreateRtpSessionInitData(const char* localIp,const char* re
 void DestroyRtpSessionInitData(CRtpSessionInitData* pi)
 {
     if(!pi){
-        std::cout<<LOG_FIXED_HEADER()<<":invalid function pointer."<<std::endl;
+        std::cerr<<LOG_FIXED_HEADER()<<":invalid function pointer."<<std::endl;
         return ;
     }
 
     delete pi;
 }
 
+CRtpSessionInitData* SetLocalIp(CRtpSessionInitData* p,const char* localIp){
+    if(p){
+        p->localIp=localIp;
+    }
 
-//static inline RtpSessionMpl* GetRtpSessionMpl(void* p){
-//    CRtpSessionManager* pm=static_cast<CRtpSessionManager*>(p);
-//    if(pm==nullptr){
-//        std::cout<<LOG_FIXED_HEADER()<<" invalid pointer"<<std::endl;
-//        return nullptr;
-//    }
-//    return pm->pIml;
-//}
+    return p;
+}
+CRtpSessionInitData* SetRemoteIp(CRtpSessionInitData* p,const char* remoteIp){
+    if(p)p->remoteIp=remoteIp;
+    return p;
+}
+CRtpSessionInitData* SetLocalPort(CRtpSessionInitData* p,int localPort){
+    if(p)p->localPort=localPort;
+    return p;
+}
+CRtpSessionInitData* SetRemotePort(CRtpSessionInitData* p,int remotePort){
+    if(p)p->remotePort=remotePort;
+    return p;
+}
+CRtpSessionInitData* SetPayloadType(CRtpSessionInitData* p,int pt){
+    if(p)p->payloadType=pt;
+    return p;
+}
+CRtpSessionInitData* SetClockRate(CRtpSessionInitData* p,int cr){
+    if(p)p->clockRate=cr;
+    return p;
+}
+CRtpSessionInitData* addPairsParams(CRtpSessionInitData* p,const char* key,const char* value){
+    if(!key || !value){
+        std::cerr<<LOG_FIXED_HEADER()<<"The key or value is invalid."<<std::endl;
+        return p;
+    }
+    if(p){
+        p->AddPairsParam(key,value);
+    }
 
-uint32_t GetTimeStamp(void* p){return ((CRtpSessionManager*)(p))->pIml->GetRtpHeaderData().ts;}
-uint16_t GetSequenceNumber(void* p){ return ((CRtpSessionManager*)(p))->pIml->GetRtpHeaderData().seq;}
-uint32_t GetSsrc(void* p){return ((CRtpSessionManager*)(p))->pIml->GetRtpHeaderData().ssrc;}
-uint32_t* GetCsrc(void* p){return (uint32_t*) ((CRtpSessionManager*)(p))->pIml->GetRtpHeaderData().csrc;}
-uint16_t GetPayloadType(void* p){return ((CRtpSessionManager*)(p))->pIml->GetRtpHeaderData().pt;}
-bool     GetMarker(void* p){return ((CRtpSessionManager*)(p))->pIml->GetRtpHeaderData().marker;}
-uint8_t  GetVersion(void* p){return ((CRtpSessionManager*)(p))->pIml->GetRtpHeaderData().version;}
-bool     GetPadding(void* p){return ((CRtpSessionManager*)(p))->pIml->GetRtpHeaderData().padding;}
-bool     GetExtension(void* p){return ((CRtpSessionManager*)(p))->pIml->GetRtpHeaderData().extension;}
-uint8_t  GetCC(void* p){return ((CRtpSessionManager*)(p))->pIml->GetRtpHeaderData().cc;}
+    return p;
+}
 
 
-//for rtcp
-//inline uint8_t* GetPacketData(void* p,void* rtcpPacket){return ((CRtpSessionManager*)(p))->pIml->GetPacketData(rtcpPacket);}
-//inline int GetPacketDataLength(void* p);
-//inline uint8_t* GetAppData(void* p);
-//inline int GetAppDataLength(void* rtcpPacket);
-//inline uint8_t* GetAppName(void* rtcpPacket);
-//inline uint32_t GetAppSsrc(void* rtcpPacket);
-//inline uint8_t GetAppSubType(void* rtcpPacket);
+static inline const RtpSessionMpl* checkRtpSessionMpl(void* p){
+    CRtpSessionManager* pm=static_cast<CRtpSessionManager*>(p);
+    if(pm==nullptr){
+        std::cerr<<LOG_FIXED_HEADER()<<" invalid pointer"<<std::endl;
+        return nullptr;
+    }
+    return pm->pIml;
+}
+uint32_t GetTimeStamp(void* p){
+    const RtpSessionMpl* imp= checkRtpSessionMpl(p);
+    return imp ? imp->GetRtpHeaderData().ts : 0;
+}
+uint16_t GetSequenceNumber(void* p){
+    const RtpSessionMpl* imp= checkRtpSessionMpl(p);
+    return imp ? imp->GetRtpHeaderData().seq : 0;
+//    return ((CRtpSessionManager*)(p))->pIml->GetRtpHeaderData().seq;
+}
+uint32_t GetSsrc(void* p) {
+    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+    return imp ? imp->GetRtpHeaderData().ssrc : 0;
+//    return ((CRtpSessionManager*)(p))->pIml->GetRtpHeaderData().ssrc;
+}
+uint32_t* GetCsrc(void* p){
+    const RtpSessionMpl* imp= checkRtpSessionMpl(p);
+    return imp ? (uint32_t*)imp->GetRtpHeaderData().csrc : nullptr;
+//    return (uint32_t*) ((CRtpSessionManager*)(p))->pIml->GetRtpHeaderData().csrc;
+}
+uint16_t GetPayloadType(void* p){
+    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+    return imp ? imp->GetRtpHeaderData().pt : 0;
+//    return ((CRtpSessionManager*)(p))->pIml->GetRtpHeaderData().pt;
+}
+bool GetMarker(void* p){
+    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+    return imp ? imp->GetRtpHeaderData().marker : 0;
+//    return ((CRtpSessionManager*)(p))->pIml->GetRtpHeaderData().marker;
+}
+uint8_t  GetVersion(void* p){
+    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+    return imp ? imp->GetRtpHeaderData().version : 0;
+//    return ((CRtpSessionManager*)(p))->pIml->GetRtpHeaderData().version;
+}
+bool GetPadding(void* p){
+    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+    return imp ? imp->GetRtpHeaderData().padding : 0;
+//    return ((CRtpSessionManager*)(p))->pIml->GetRtpHeaderData().padding;
+}
+bool GetExtension(void* p){
+    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+    return imp ? imp->GetRtpHeaderData().extension : 0;
+//    return ((CRtpSessionManager*)(p))->pIml->GetRtpHeaderData().extension;
+}
+uint8_t  GetCC(void* p){
+    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+    return imp ? imp->GetRtpHeaderData().cc : 0;
+//    return ((CRtpSessionManager*)(p))->pIml->GetRtpHeaderData().cc;
+}
+
+
+
+static inline RtcpPacket* checkRtcpPacketPointer(void* p){
+    RtcpPacket* rp=static_cast<RtcpPacket*>(p);
+    if(!rp){
+        std::cerr<<LOG_FIXED_HEADER()<<"The pointer is invalid."<<std::endl;
+    }
+
+    return rp;
+
+}
+uint8_t* GetRtcpPacketData(void* p,void* rtcpPacket){
+    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
+    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+
+    return (imp && rp) ? imp->GetPacketData(rp) : nullptr;
+}
+int GetPacketDataLength(void* p,void* rtcpPacket){
+    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
+    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+
+    return (imp && rp) ? imp->GetPacketDataLength(rp) : 0;
+}
+uint8_t* GetAppData(void* p,void*rtcpPacket){
+    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
+    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+
+    return (imp && rp) ? imp->GetAppData(rp) : nullptr;
+}
+int GetAppDataLength(void* p,void* rtcpPacket){
+    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
+    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+
+    return (imp && rp) ? imp->GetAppDataLength(rp) : 0;
+}
+uint8_t* GetAppName(void* p,void* rtcpPacket){
+    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
+    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+
+    return (imp && rp) ? imp->GetAppName(rp) : nullptr;
+}
+uint32_t GetAppSsrc(void* p,void* rtcpPacket){
+    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
+    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+
+    return (imp && rp) ? imp->GetAppSsrc(rp) : 0 ;
+}
+uint8_t GetAppSubType(void* p,void* rtcpPacket){
+    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
+    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+
+    return (imp && rp) ? imp->GetAppSubType(rp) : 0 ;
+}
 

@@ -18,11 +18,21 @@ typedef struct CRtpSessionInitData CRtpSessionInitData;
 typedef int (*CRcvCb)(const uint8_t *buf, int len, int marker, void *user);
 int RcvCb(uint8_t *buf, int len, int marker, void *user); //ensure the same function name when define with go language
 
+//typedef struct CRtcpPacket CRtcpPacket;
+typedef void (*CRtcpRcvCb)(void* rtcpPacket,void* user);
+void CRtcpRcvCbFunction(void* rtcpPacket,void* user);
+
+
+//typedef struct CRtcpPacketType CRtcpPacketType;
+
 typedef enum CRtpSessionType{
     CRtpSessionType_ORTP,
     CRtpSessionType_JRTP
 }CRtpSessionType;
 
+/*
+ * Rtp interface.
+ */
 CRtpSessionManager* CreateRtpSession(CRtpSessionType t);
 void DestroyRtpSession(CRtpSessionManager* p);
 bool InitRtpSession(CRtpSessionManager* p,CRtpSessionInitData* pInitData);
@@ -33,11 +43,38 @@ int RcvDataRtpSession(CRtpSessionManager* p,uint8_t* buf,int len,CRcvCb rcvCb,vo
 int SendDataWithTsRtpSession(CRtpSessionManager* p,const uint8_t* buf,int len,uint32_t pts,uint16_t marker);
 int RcvDataWithTsRtpSession(CRtpSessionManager* p,uint8_t* buf,int len,uint32_t ts,CRcvCb rcvCb,void* user);
 
+/*
+ * rtcp initialized interface
+ * @type:
+ * @cb:it should be CRtcpRcv type or occur a error
+ */
+bool RegisterRtcpRcvCb(CRtpSessionManager* p,int type,void* cb,void* user);
+
+
+/*
+ * rtp session initialized param
+ */
 CRtpSessionInitData*  CreateRtpSessionInitData(const char* localIp,const char* remoteIp,int localPort
                                                ,int remotePort,int payloadType,int clockRate);
 void DestroyRtpSessionInitData(CRtpSessionInitData* pi);
 
-//receive rtp header
+CRtpSessionInitData* SetLocalIp(CRtpSessionInitData* p,const char* localIp);
+CRtpSessionInitData* SetRemoteIp(CRtpSessionInitData* p,const char* remoteIp);
+CRtpSessionInitData* SetLocalPort(CRtpSessionInitData* p,int localPort);
+CRtpSessionInitData* SetRemotePort(CRtpSessionInitData* p,int remotePort);
+CRtpSessionInitData* SetPayloadType(CRtpSessionInitData* p,int pt);
+CRtpSessionInitData* SetClockRate(CRtpSessionInitData* p,int cr);
+
+/*
+ * extension params
+ * support k-v:
+ * 1.receiveBufferSize:10000 (byte)
+ */
+CRtpSessionInitData* addPairsParams(CRtpSessionInitData* p,const char* key,const char* value);
+
+
+
+//receive rtp header massage
 uint32_t GetTimeStamp(void* p);
 uint16_t GetSequenceNumber(void* p);
 uint32_t GetSsrc(void* p);
@@ -50,14 +87,16 @@ bool     GetExtension(void* p);
 uint8_t  GetCC(void* p);
 
 
-//rtcp
-//inline uint8_t* GetPacketData(void* rtcpPacket);
-//inline int GetPacketDataLength(void* rtcpPacket);
-//inline uint8_t* GetAppData(void* p);
-//inline int GetAppDataLength(void* rtcpPacket);
-//inline uint8_t* GetAppName(void* rtcpPacket);
-//inline uint32_t GetAppSsrc(void* rtcpPacket);
-//inline uint8_t GetAppSubType(void* rtcpPacket);
+/*
+ * rtcp packet interface
+ */
+uint8_t* GetRtcpPacketData(void* p,void* rtcpPacket);
+int GetPacketDataLength(void* p,void* rtcpPacket);
+uint8_t* GetAppData(void* p,void*rtcpPacket);
+int GetAppDataLength(void* p,void* rtcpPacket);
+uint8_t* GetAppName(void* p,void* rtcpPacket);
+uint32_t GetAppSsrc(void* p,void* rtcpPacket);
+uint8_t GetAppSubType(void* p,void* rtcpPacket);
 
 
 #ifdef __cplusplus

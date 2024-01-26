@@ -9,6 +9,7 @@
 #include "ICommon.h"
 #include <map>
 #include "RtcpPacket.h"
+//#include <thread>
 
 //#ifdef __cplusplus
 //extern "C" {
@@ -66,8 +67,21 @@ namespace iRtp {
     struct RtcpRcvCbData{
         RtcpRcvCb cb{nullptr};
         void*   user{nullptr};
+
+        enum CallBackType{
+            APP_PACKET,
+            RECEIVER_REPORT,
+            SENDER_REPORT,
+            SDES_ITEM,
+            SDES_PRIVATE_ITEM,
+            BYE_PACKET,
+            COMPOUND_PACKET, //origin packet include one or more type
+            SIZE
+        };
+
     };
 
+    static const int  MAX_CALLBACK_ITEM_SIZE=RtcpRcvCbData::SIZE;
 
     class RtpSessionMpl {
     public:
@@ -170,7 +184,7 @@ namespace iRtp {
          * @param [in] subType:the subType of app packet
          * @param [in] name:the name of app packet
          * @param [in] appData:the data of app packet
-         * @param [in] appDataLen:the data length of app packet
+         * @param [in] appDataLen:the data length of app packet.it must be a multiple of 32 bits long
          *  @return the len of real send
          */
         virtual int SendRtcpAppData(uint8_t subType,const uint8_t name[4],const void* appData,int appDataLen){return 0;}
@@ -182,7 +196,7 @@ namespace iRtp {
          * @return true if success or false
          */
         inline bool RegisterRtcpRcvCb(int type,RtcpRcvCb cb,void* user){
-            if(type>=RTCP_PACKET_SIZE || type<0){
+            if(type>=MAX_CALLBACK_ITEM_SIZE || type<0){
                 std::cout<<"The type is invalid."<<std::endl;
                 return false;
             }
@@ -197,17 +211,17 @@ namespace iRtp {
          * @param [in] type:rtcp type
          * @return the callback function
          */
-        RtcpRcvCbData* GetRtcpRcvCbData(int t){return t<RTCP_PACKET_SIZE? &(m_rtcpRcvCbDataArr[t]): nullptr;}
+        RtcpRcvCbData* GetRtcpRcvCbData(int t){return t<MAX_CALLBACK_ITEM_SIZE ? &(m_rtcpRcvCbDataArr[t]):nullptr;}
 
         /*
          * rtcp packet without unpacking
          * the user should unpack including different type by self
          */
-        inline uint8_t* GetPacketData(void* rtcpPacket){
+        inline uint8_t* GetPacketData(RtcpPacket* rtcpPacket)const{
             RtcpPacket* p=static_cast<RtcpPacket*>(rtcpPacket);
             return p ? p->data: nullptr;
         }
-        inline int GetPacketDataLength(void* rtcpPacket){
+        inline int GetPacketDataLength(RtcpPacket* rtcpPacket)const{
             RtcpPacket* p=static_cast<RtcpPacket*>(rtcpPacket);
             return p ? p->dataLen: 0;
         }
@@ -215,35 +229,36 @@ namespace iRtp {
         /*
          * app packet.user can get different fields by call function as follow
          */
-        inline uint8_t* GetAppData(void* rtcpPacket){
+        inline uint8_t* GetAppData(RtcpPacket* rtcpPacket)const{
             RtcpAppPacket* p=static_cast<RtcpAppPacket*>(rtcpPacket);
             return p ? p->appData:nullptr;
         }
-        inline int GetAppDataLength(void* rtcpPacket){
+        inline int GetAppDataLength(RtcpPacket* rtcpPacket)const{
             RtcpAppPacket* p=static_cast<RtcpAppPacket*>(rtcpPacket);
             return p ? p->appDataLen:0;
         }
-        inline uint8_t* GetAppName(void* rtcpPacket) {
+        inline uint8_t* GetAppName(RtcpPacket* rtcpPacket)const{
             RtcpAppPacket* p=static_cast<RtcpAppPacket*>(rtcpPacket);
             return p ? p->name: nullptr;
         }
-        inline uint32_t GetAppSsrc(void* rtcpPacket){
+        inline uint32_t GetAppSsrc(RtcpPacket* rtcpPacket)const{
             RtcpAppPacket* p=static_cast<RtcpAppPacket*>(rtcpPacket);
             return p ? p->ssrc: 0;
         }
-        inline uint8_t GetAppSubType(void* rtcpPacket){
+        inline uint8_t GetAppSubType(RtcpPacket* rtcpPacket)const{
             RtcpAppPacket* p=static_cast<RtcpAppPacket*>(rtcpPacket);
             return p ? p->subType: 0;
         }
-
-
 
 
     protected:
         std::atomic_bool    m_bStopFlag;
         RtpHeaderData       m_rtpHeaderData;
 
-        RtcpRcvCbData       m_rtcpRcvCbDataArr[RTCP_PACKET_SIZE];
+        RtcpRcvCbData       m_rtcpRcvCbDataArr[MAX_CALLBACK_ITEM_SIZE];
+
+
+//        std::thread*        m_pWorkThread;    //
 
     };
 

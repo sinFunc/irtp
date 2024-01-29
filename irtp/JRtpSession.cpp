@@ -29,12 +29,24 @@ public:
 	 *  RTPSession::OnValidatedRTPPacket function should be used.
 	 */
     virtual void OnRTPPacket(RTPPacket *pack,const RTPTime &receivetime, const RTPAddress *senderaddress){
+
+
 //        std::cout<<LOG_FIXED_HEADER()<<"receive rtp packet"<<std::endl;
     }
 
     /** Is called when an incoming RTCP packet is about to be processed. */
 //    virtual void OnRTCPCompoundPacket(RTCPCompoundPacket *pack,const RTPTime &receivetime,
 //                                      const RTPAddress *senderaddress){
+//        //provide interface to user to get origin rtcp data
+//        RtcpRcvCbData* p=m_pRefJRtpSession->GetRtcpRcvCbData(RtcpRcvCbData::UNKNOWN);
+//        if(!p->cb){ //ignore.because it is not necessary for application layer
+//            return;
+//        }
+//
+//
+//
+//
+//
 //        //std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
 //    }
 
@@ -43,35 +55,35 @@ public:
      *  the table, the address \c senderaddress is the one that collided with one of the addresses
      *  and \c isrtp indicates against which address of \c srcdat the check failed.
      */
-    virtual void OnSSRCCollision(RTPSourceData *srcdat,const RTPAddress *senderaddress,bool isrtp){
-        //std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
-    }
+//    virtual void OnSSRCCollision(RTPSourceData *srcdat,const RTPAddress *senderaddress,bool isrtp){
+//        //std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
+//    }
 
     /** Is called when another CNAME was received than the one already present for source \c srcdat. */
-    virtual void OnCNAMECollision(RTPSourceData *srcdat,const RTPAddress *senderaddress,
-                                  const uint8_t *cname,size_t cnamelength){
-        //std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
-    }
+//    virtual void OnCNAMECollision(RTPSourceData *srcdat,const RTPAddress *senderaddress,
+//                                  const uint8_t *cname,size_t cnamelength){
+//        //std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
+//    }
 
     /** Is called when a new entry \c srcdat is added to the source table. */
-    virtual void OnNewSource(RTPSourceData *srcdat){
-        //std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
-    }
+//    virtual void OnNewSource(RTPSourceData *srcdat){
+//        //std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
+//    }
 
     /** Is called when the entry \c srcdat is about to be deleted from the source table. */
-    virtual void OnRemoveSource(RTPSourceData *srcdat){
-        //std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
-    }
+//    virtual void OnRemoveSource(RTPSourceData *srcdat){
+//        //std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
+//    }
 
     /** Is called when participant \c srcdat is timed out. */
-    virtual void OnTimeout(RTPSourceData *srcdat){
-        //std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
-    }
+//    virtual void OnTimeout(RTPSourceData *srcdat){
+//        //std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
+//    }
 
     /** Is called when participant \c srcdat is timed after having sent a BYE packet. */
-    virtual void OnBYETimeout(RTPSourceData *srcdat){
-        //std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
-    }
+//    virtual void OnBYETimeout(RTPSourceData *srcdat){
+//        //std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
+//    }
 
     /** Is called when an RTCP APP packet \c apppacket has been received at time \c receivetime
      *  from address \c senderaddress.
@@ -98,6 +110,17 @@ public:
     /** Is called when an unknown RTCP packet type was detected. */
     virtual void OnUnknownPacketType(RTCPPacket *rtcppack,const RTPTime &receivetime,
                                      const RTPAddress *senderaddress){
+        RtcpRcvCbData* p=m_pRefJRtpSession->GetRtcpRcvCbData(RtcpRcvCbData::UNKNOWN);
+        if(!p->cb){ //ignore.because it is not necessary for application layer
+            return;
+        }
+
+        RtcpUnknownPacket d;
+        d.data=rtcppack->GetPacketData();
+        d.dataLen=rtcppack->GetPacketLength();
+        d.unKnownType=rtcppack->GetPacketType();
+        p->cb(&d,p->user);
+
         //std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
     }
 
@@ -108,18 +131,48 @@ public:
     }
 
     /** Is called when the SDES NOTE item for source \c srcdat has been timed out. */
-    virtual void OnNoteTimeout(RTPSourceData *srcdat){
-        //std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
-    }
+//    virtual void OnNoteTimeout(RTPSourceData *srcdat){
+//        //std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
+//    }
 
     /** Is called when an RTCP sender report has been processed for this source. */
     virtual void OnRTCPSenderReport(RTPSourceData *srcdat){
-        //std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
+        RtcpRcvCbData* p=m_pRefJRtpSession->GetRtcpRcvCbData(RtcpRcvCbData::SENDER_REPORT);
+        if(!p->cb){ //ignore.because it is not necessary for application layer
+            return;
+        }
 
+        RtcpSRPacket d;
+        d.ssrc=srcdat->GetSSRC();
+        d.rtpTimeStamp=srcdat->SR_GetRTPTimestamp();
+        d.senderOctetCount=srcdat->SR_GetByteCount();
+        d.senderPacketCount=srcdat->SR_GetPacketCount();
+        d.ntpMSWTimeStamp=srcdat->SR_GetNTPTimestamp().GetMSW();
+        d.ntpLSWTimeStamp=srcdat->SR_GetNTPTimestamp().GetLSW();
+        p->cb(&d,p->user);
+
+        //std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
     }
+
+
 
     /** Is called when an RTCP receiver report has been processed for this source. */
     virtual void OnRTCPReceiverReport(RTPSourceData *srcdat){
+        RtcpRcvCbData* p=m_pRefJRtpSession->GetRtcpRcvCbData(RtcpRcvCbData::RECEIVER_REPORT);
+        if(!p->cb){ //ignore.because it is not necessary for application layer
+            return;
+        }
+
+        RtcpRRPacket d;
+        d.fractionLost=srcdat->RR_GetFractionLost();
+        d.lostPacketNumber=srcdat->RR_GetPacketsLost();
+        d.extendedHighestSequenceNumber=srcdat->RR_GetExtendedHighestSequenceNumber();
+        d.jitter=srcdat->RR_GetJitter();
+        d.lastSR=srcdat->RR_GetLastSRTimestamp();
+        d.delaySinceLatSR=srcdat->RR_GetDelaySinceLastSR();
+        p->cb(&d,p->user);
+
+
 //        std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
     }
 
@@ -137,7 +190,7 @@ public:
         d.itemData=(uint8_t*)itemdata;
         d.itemDataLen=itemlength;
         d.itemType=(int)t;
-
+        d.ssrc=srcdat->GetSSRC();
         p->cb(&d,p->user);
 
 //        std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
@@ -148,19 +201,42 @@ public:
     //srcdata is the type of RTPInternalSourceData(inherit from RTPSourceData) from rtpsources.cpp 770 lines
     virtual void OnRTCPSDESPrivateItem(RTPSourceData *srcdat, const void *prefixdata, size_t prefixlen,
                                        const void *valuedata, size_t valuelen){
+        RtcpRcvCbData* p=m_pRefJRtpSession->GetRtcpRcvCbData(RtcpRcvCbData::SDES_PRIVATE_ITEM);
+        if(!p->cb){ //ignore.because it is not necessary for application layer
+            return;
+        }
+
+        RtcpSdesPrivatePacket d;
+        d.ssrc=srcdat->GetSSRC();
+        d.prefixData=(uint8_t*)prefixdata;
+        d.prefixDataLength=prefixlen;
+        d.valueData=(uint8_t*)valuedata;
+        d.valueDataLength=valuelen;
+        p->cb(&d,p->user);
 
     }
 
 
     /** Is called when a BYE packet has been processed for source \c srcdat. */
     virtual void OnBYEPacket(RTPSourceData *srcdat){
+        RtcpRcvCbData* p=m_pRefJRtpSession->GetRtcpRcvCbData(RtcpRcvCbData::BYE_PACKET);
+        if(!p->cb){ //ignore.because it is not necessary for application layer
+            return;
+        }
+
+        RtcpByePacket d;
+        d.ssrc=srcdat->GetSSRC();
+        size_t reasonLen;
+        d.reasonData=srcdat->GetBYEReason(&reasonLen);
+        d.reasonDataLength=reasonLen;
+        p->cb(&d,p->user);
 //        std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
     }
 
     /** Is called when an RTCP compound packet has just been sent (useful to inspect outgoing RTCP data). */
-    virtual void OnSendRTCPCompoundPacket(RTCPCompoundPacket *pack){
-        //std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
-    }
+//    virtual void OnSendRTCPCompoundPacket(RTCPCompoundPacket *pack){
+//        //std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
+//    }
 
 private:
     JRtpSession*    m_pRefJRtpSession;

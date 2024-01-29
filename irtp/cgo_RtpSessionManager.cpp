@@ -131,6 +131,14 @@ bool RegisterRtcpRcvCb(CRtpSessionManager* p,int type,void* cb,void* user)
     return CheckRtpSessionMgrPointer(p) && p->pIml->RegisterRtcpRcvCb(type,pf,user);
 
 }
+bool RegisterAppPacketRcvCb(CRtpSessionManager* p,void* cb,void* user){return RegisterRtcpRcvCb(p,RtcpRcvCbData::APP_PACKET,cb,user);}
+bool RegisterRRPacketRcvCb(CRtpSessionManager* p,void* cb,void* user){return RegisterRtcpRcvCb(p,RtcpRcvCbData::RECEIVER_REPORT,cb,user);}
+bool RegisterSRPacketRcvCb(CRtpSessionManager* p,void* cb,void* user){return RegisterRtcpRcvCb(p,RtcpRcvCbData::SENDER_REPORT,cb,user);}
+bool RegisterSdesItemRcvCb(CRtpSessionManager* p,void* cb,void* user){return RegisterRtcpRcvCb(p,RtcpRcvCbData::SDES_ITEM,cb,user);}
+bool RegisterSdesPrivateItemRcvCb(CRtpSessionManager* p,void* cb,void* user){{return RegisterRtcpRcvCb(p,RtcpRcvCbData::SDES_PRIVATE_ITEM,cb,user);}}
+bool RegisterByePacketRcvCb(CRtpSessionManager* p,void* cb,void* user){return RegisterRtcpRcvCb(p,RtcpRcvCbData::BYE_PACKET,cb,user);}
+bool RegisterUnKnownPacketRcvCb(CRtpSessionManager* p,void* cb,void* user){{return RegisterRtcpRcvCb(p,RtcpRcvCbData::UNKNOWN,cb,user);}}
+
 
 
 CRtpSessionInitData* CreateRtpSessionInitData(const char* localIp,const char* remoteIp,int localPort
@@ -268,18 +276,29 @@ static inline RtcpPacket* checkRtcpPacketPointer(void* p){
     return rp;
 
 }
-uint8_t* GetRtcpPacketData(void* p,void* rtcpPacket){
-    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
-    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+/*
+ * origin rtcp data.but disable now.
+ * enable when work task need
+ */
+//uint8_t* GetRtcpPacketData(void* p,void* rtcpPacket){
+//    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
+//    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+//
+//    return (imp && rp) ? imp->GetPacketData(rp) : nullptr;
+//}
+//int GetPacketDataLength(void* p,void* rtcpPacket){
+//    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
+//    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+//
+//    return (imp && rp) ? imp->GetPacketDataLength(rp) : 0;
+//}
+//uint32_t GetSSRC(void* p,void* rtcpPacket){
+//    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
+//    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+//
+//    return (imp && rp) ? imp->GetSSRC(rp) : 0;
+//}
 
-    return (imp && rp) ? imp->GetPacketData(rp) : nullptr;
-}
-int GetPacketDataLength(void* p,void* rtcpPacket){
-    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
-    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
-
-    return (imp && rp) ? imp->GetPacketDataLength(rp) : 0;
-}
 uint8_t* GetAppData(void* p,void*rtcpPacket){
     RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
     const RtpSessionMpl *imp = checkRtpSessionMpl(p);
@@ -311,3 +330,153 @@ uint8_t GetAppSubType(void* p,void* rtcpPacket){
     return (imp && rp) ? imp->GetAppSubType(rp) : 0 ;
 }
 
+uint8_t* GetSdesItemData(void* p,void* rtcpPacket){
+    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
+    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+
+    return (imp && rp) ? imp->GetSdesItemData(rp) : nullptr;
+}
+int GetSdesItemDataLen(void* p,void* rtcpPacket){
+    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
+    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+
+    return (imp && rp) ? imp->GetSdesItemDataLen(rp) : 0;
+}
+int GetSdesItemType(void* p,void* rtcpPacket){
+    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
+    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+
+    return (imp && rp) ? imp->GetSdesItemType(rp) : 0;
+}
+
+uint8_t* GetSdesPrivatePrefixData(void* p,void* rtcpPacket){
+    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
+    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+
+    return (imp && rp) ? imp->GetSdesPrivatePrefixData(rp) : nullptr;
+}
+int GetSdesPrivatePrefixDataLen(void* p,void* rtcpPacket){
+    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
+    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+
+    return (imp && rp) ? imp->GetSdesPrivatePrefixDataLen(rp) : 0;
+}
+uint8_t* GetSdesPrivateValueData(void* p,void* rtcpPacket){
+    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
+    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+
+    return (imp && rp) ? imp->GetSdesPrivateValueData(rp) : nullptr;
+}
+int GetSdesPrivateValueDataLen(void* p,void* rtcpPacket){
+    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
+    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+
+    return (imp && rp) ? imp->GetSdesPrivateValueDataLen(rp) : 0;
+}
+
+uint8_t  GetUnknownPacketType(void* p,void* rtcpPacket){
+    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
+    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+
+    return (imp && rp) ? imp->GetUnknownPacketType(rp) : 0 ;
+}
+uint8_t* GetUnKnownRtcpPacketData(void* p,void* rtcpPacket){
+    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
+    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+
+    return (imp && rp) ? imp->GetUnKnownRtcpPacketData(rp) :  nullptr;
+}
+int GetUnKnownRtcpPacketDataLen(void* p,void* rtcpPacket){
+    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
+    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+
+    return (imp && rp) ? imp->GetUnKnownRtcpPacketDataLen(rp) : 0;
+}
+uint32_t GetUnKnownRtcpPacketSsrc(void* p,void* rtcpPacket){
+    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
+    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+
+    return (imp && rp) ? imp->GetUnKnownRtcpPacketSsrc(rp) : 0;
+}
+
+uint8_t GetRRFractionLost(void* p,void* rtcpPacket){
+    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
+    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+
+    return (imp && rp) ? imp->GetRRFractionLost(rp) : 0;
+}
+uint32_t GetRRLostPacketNumber(void* p,void* rtcpPacket){
+    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
+    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+
+    return (imp && rp) ? imp->GetRRLostPacketNumber(rp) : 0;
+}
+uint32_t GetRRExtendedHighestSequenceNumber(void* p,void* rtcpPacket){
+    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
+    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+
+    return (imp && rp) ? imp->GetRRExtendedHighestSequenceNumber(rp) : 0;
+}
+uint32_t GetRRJitter(void* p,void* rtcpPacket){
+    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
+    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+
+    return (imp && rp) ? imp->GetRRJitter(rp) : 0;
+}
+uint32_t GetRRLastSR(void* p,void* rtcpPacket){
+    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
+    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+
+    return (imp && rp) ? imp->GetRRLastSR(rp) : 0;
+}
+uint32_t GetRRDelaySinceLastSR(void* p,void* rtcpPacket){
+    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
+    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+
+    return (imp && rp) ? imp->GetRRDelaySinceLastSR(rp) : 0;
+}
+
+uint32_t GetSRNtpLSWTimeStamp(void* p,void* rtcpPacket){
+    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
+    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+
+    return (imp && rp) ? imp->GetSRNtpLSWTimeStamp(rp) : 0;
+}
+uint32_t GetSRNtpMSWTimeStamp(void* p,void* rtcpPacket){
+    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
+    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+
+    return (imp && rp) ? imp->GetSRNtpMSWTimeStamp(rp) : 0;
+}
+uint32_t GetSRRtpTimeStamp(void* p,void* rtcpPacket){
+    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
+    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+
+    return (imp && rp) ? imp->GetSRRtpTimeStamp(rp) : 0;
+}
+uint32_t GetSRSenderPacketCount(void* p,void* rtcpPacket){
+    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
+    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+
+    return (imp && rp) ? imp->GetSRSenderPacketCount(rp) : 0;
+}
+uint32_t GetSRSenderOctetCount(void* p,void* rtcpPacket){
+    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
+    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+
+    return (imp && rp) ? imp->GetSRSenderOctetCount(rp) : 0;
+}
+
+
+uint8_t* GetByeReasonData(void* p,void* rtcpPacket){
+    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
+    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+
+    return (imp && rp) ? imp->GetByeReasonData(rp) : nullptr;
+}
+int GetByeReasonDataLen(void* p,void* rtcpPacket){
+    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
+    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+
+    return (imp && rp) ? imp->GetByeReasonDataLen(rp) : 0;
+}

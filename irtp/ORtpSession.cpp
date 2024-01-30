@@ -71,17 +71,15 @@ void ORtpSession::StaticInit()
     ++gStaticInitCount;
 }
 
-bool ORtpSession::Start()
+void ORtpSession::loop()
 {
 
-    return true;
+
 }
 
 
-bool ORtpSession::Stop()
+bool ORtpSession::stop()
 {
-    m_bStopFlag=true;
-
     if(m_pRtpSession){
         rtp_session_destroy(m_pRtpSession);
         m_pRtpSession=nullptr;

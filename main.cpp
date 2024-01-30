@@ -23,13 +23,85 @@ int rcvCb(const uint8_t* buf,int len,int marker,void* user)
     return len;
 }
 
+int rtpRcvPayloadCb(const uint8_t* buf,int len,int marker,void* user)
+{
+    iRtp::RtpSessionMpl* p=static_cast<iRtp::RtpSessionMpl*>(user);
+
+    std::cout<<LOG_FIXED_HEADER()<<"seq="<<p->GetRtpHeaderData().seq<<";ts="<<p->GetRtpHeaderData().ts<<":the len of receiving payload data="<<len<<std::endl;
+    return len;
+}
+int rtpRcvPacketCb(const uint8_t* buf,int len,int marker,void* user)
+{
+    iRtp::RtpSessionMpl* p=static_cast<iRtp::RtpSessionMpl*>(user);
+
+    std::cout<<LOG_FIXED_HEADER()<<"seq="<<p->GetRtpHeaderData().seq<<";ts="<<p->GetRtpHeaderData().ts<<":the len of receiving packet data="<<len<<std::endl;
+    return len;
+}
+
 void rtcpAppRcvCb(void* rtcpPacket,void* user)
 {
     iRtp::RtpSessionMpl* p=static_cast<iRtp::RtpSessionMpl*>(user);
 
-    std::cout<<LOG_FIXED_HEADER()<<"name="<<p->GetAppName(rtcpPacket)<<";subType="<<p->GetAppSubType(rtcpPacket)<<std::endl;
+    iRtp::RtcpPacket* rp=static_cast<iRtp::RtcpPacket*>(rtcpPacket);
+
+    std::cout<<LOG_FIXED_HEADER()<<"name="<<p->GetAppName(rp)<<";subType="<<p->GetAppSubType(rp)<<std::endl;
 
 }
+void RtcpSdesItemRcvCb(void* rtcpPacket,void* user)
+{
+    iRtp::RtpSessionMpl* p=static_cast<iRtp::RtpSessionMpl*>(user);
+
+    iRtp::RtcpPacket* rp=static_cast<iRtp::RtcpPacket*>(rtcpPacket);
+
+    std::cout<<LOG_FIXED_HEADER()<<"len="<<p->GetSdesItemDataLen(rp)<<std::endl;
+
+}
+void RtcpSdesPrivateItemRcvCb(void* rtcpPacket,void* user)
+{
+    iRtp::RtpSessionMpl* p=static_cast<iRtp::RtpSessionMpl*>(user);
+
+    iRtp::RtcpPacket* rp=static_cast<iRtp::RtcpPacket*>(rtcpPacket);
+
+    std::cout<<LOG_FIXED_HEADER()<<"len="<<p->GetSdesPrivateValueDataLen(rp)<<std::endl;
+
+}
+void RtcpByeRcvCb(void* rtcpPacket,void* user)
+{
+    iRtp::RtpSessionMpl* p=static_cast<iRtp::RtpSessionMpl*>(user);
+
+    iRtp::RtcpPacket* rp=static_cast<iRtp::RtcpPacket*>(rtcpPacket);
+
+    std::cout<<LOG_FIXED_HEADER()<<"bye reason length="<<p->GetByeReasonDataLen(rp)<<std::endl;
+
+}
+void RtcpUnKnownRcvCb(void* rtcpPacket,void* user)
+{
+    iRtp::RtpSessionMpl* p=static_cast<iRtp::RtpSessionMpl*>(user);
+
+    iRtp::RtcpPacket* rp=static_cast<iRtp::RtcpPacket*>(rtcpPacket);
+
+    std::cout<<LOG_FIXED_HEADER()<<"len="<<p->GetUnKnownRtcpPacketDataLen(rp)<<std::endl;
+
+}
+void RtcpRRRcvCb(void* rtcpPacket,void* user)
+{
+    iRtp::RtpSessionMpl* p=static_cast<iRtp::RtpSessionMpl*>(user);
+
+    iRtp::RtcpPacket* rp=static_cast<iRtp::RtcpPacket*>(rtcpPacket);
+
+    std::cout<<LOG_FIXED_HEADER()<<"lost packet="<<p->GetRRLostPacketNumber(rp)<<std::endl;
+
+}
+void RtcpSRRcvCb(void* rtcpPacket,void* user)
+{
+    iRtp::RtpSessionMpl* p=static_cast<iRtp::RtpSessionMpl*>(user);
+
+    iRtp::RtcpPacket* rp=static_cast<iRtp::RtcpPacket*>(rtcpPacket);
+
+    std::cout<<LOG_FIXED_HEADER()<<"sender packet count="<<p->GetSRSenderPacketCount(rp)<<std::endl;
+
+}
+
 
 //test ortp lib and as a example
 int testORtp(const std::string& lIp="",int lPort=-1,const std::string& rIp="",int rPort=-1)
@@ -40,7 +112,7 @@ int testORtp(const std::string& lIp="",int lPort=-1,const std::string& rIp="",in
     assert(pSession);
 
     iRtp::RtpSessionInitData initData(lIp,rIp,lPort,rPort,96,90000);
-    if(!pSession->Init(&initData) || !pSession->Start()){
+    if(!pSession->Init(&initData)){
         std::cout<<LOG_FIXED_HEADER()<<" Try to init rtpSession but fail"<<std::endl;
         delete pSession;
         return -1;
@@ -69,20 +141,27 @@ int testORtp(const std::string& lIp="",int lPort=-1,const std::string& rIp="",in
 
 int testJRtp(const std::string& lIp="",int lPort=-1,const std::string& rIp="",int rPort=-1)
 {
-
     std::cout<<"Start jrtp test"<<std::endl;
 
     iRtp::RtpSessionMpl* pSession=new iRtp::JRtpSession;
     assert(pSession);
 
     iRtp::RtpSessionInitData initData(lIp,rIp,lPort,rPort,96,90000);
-    if(!pSession->Init(&initData) || !pSession->Start()){
+    if(!pSession->Init(&initData)){
         std::cout<<LOG_FIXED_HEADER()<<" Try to init rtpSession but fail"<<std::endl;
         delete pSession;
         return -1;
     }
 
-    pSession->RegisterRtcpRcvCb(iRtp::RTCP_PACKET_APP,rtcpAppRcvCb,pSession);
+    pSession->RegisterRtcpRcvCb(iRtp::RtcpRcvCbData::APP_PACKET,rtcpAppRcvCb,pSession);
+    pSession->RegisterRtcpRcvCb(iRtp::RtcpRcvCbData::SDES_ITEM,RtcpSdesItemRcvCb,pSession);
+    pSession->RegisterRtcpRcvCb(iRtp::RtcpRcvCbData::SDES_PRIVATE_ITEM,RtcpSdesPrivateItemRcvCb,pSession);
+    pSession->RegisterRtcpRcvCb(iRtp::RtcpRcvCbData::BYE_PACKET,RtcpByeRcvCb,pSession);
+    pSession->RegisterRtcpRcvCb(iRtp::RtcpRcvCbData::RECEIVER_REPORT,RtcpRRRcvCb,pSession);
+    pSession->RegisterRtcpRcvCb(iRtp::RtcpRcvCbData::SENDER_REPORT,RtcpSRRcvCb,pSession);
+
+    pSession->RegisterRtpRcvCb(iRtp::RtpRcvCbData::ONLY_PAYLOAD,rtpRcvPayloadCb,pSession);
+    pSession->RegisterRtpRcvCb(iRtp::RtpRcvCbData::WHOLE_PACKET,rtpRcvPacketCb,pSession);
 
     int repeat=30;
     uint8_t buf[100]={0};
@@ -91,16 +170,20 @@ int testJRtp(const std::string& lIp="",int lPort=-1,const std::string& rIp="",in
         int len=pSession->SendData(buf,sizeof(buf)-repeat,repeat%3);
     }
 
-//    uint8_t name[4]={'i','a','m','?'};
-//    pSession->SendRtcpAppData(10,name,buf,10);
+    uint8_t name[4]={'i','a','m','?'};
+    pSession->SendRtcpAppData(1,name,buf,32);
 
-    const int rcvLen=1400;
-    uint8_t rcvBuf[rcvLen];
-    while (!stopFlag){
-//        pSession->RcvData(rcvBuf,rcvLen,rcvCb,nullptr);
-        pSession->RcvPayloadData(rcvBuf,rcvLen,rcvCb,pSession);
-        sleep(1);
-    }
+//    const int rcvLen=1400;
+//    uint8_t rcvBuf[rcvLen];
+//    while (!stopFlag){
+////        pSession->RcvData(rcvBuf,rcvLen,rcvCb,nullptr);
+//        pSession->RcvPayloadData(rcvBuf,rcvLen,rcvCb,pSession);
+//        sleep(1);
+//    }
+
+    pSession->Loop();
+    pause();
+
 
     pSession->Stop();
     delete pSession;

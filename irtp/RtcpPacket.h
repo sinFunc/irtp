@@ -53,13 +53,13 @@ public:
 class RtcpRRPacket:public RtcpPacket{
 public:
     RtcpRRPacket():fractionLost(0),lostPacketNumber(0),extendedHighestSequenceNumber(0)
-        ,jitter(0),lastSR(0),delaySinceLastSR(0){}
+        ,jitter(0),lastSR(0),delaySinceLatSR(0){}
     uint8_t fractionLost;
     uint32_t lostPacketNumber;
     uint32_t extendedHighestSequenceNumber;
     uint32_t jitter;
     uint32_t lastSR;
-    uint32_t delaySinceLastSR;
+    uint32_t delaySinceLatSR;
 };
 class RtcpSRPacket:public RtcpPacket{ //one report block
 public:

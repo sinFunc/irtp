@@ -6,11 +6,10 @@
 #define IRTP_RTPSESSIONMPL_H
 
 #include <atomic>
-#include <map>
-#include <thread>
-#include <condition_variable>
-#include "RtcpPacket.h"
 #include "ICommon.h"
+#include <map>
+#include "RtcpPacket.h"
+//#include <thread>
 
 //#ifdef __cplusplus
 //extern "C" {
@@ -62,18 +61,6 @@ namespace iRtp {
     typedef int (*RcvCb)(const uint8_t *buf, int len, int marker, void *user);
     typedef void (*RtcpRcvCb)(void* rtcpPacket,void* user);
 
-    struct RtpRcvCbData{
-        RcvCb cb{nullptr};
-        void* user{nullptr};
-
-        enum CallbackType{
-            ONLY_PAYLOAD=0,
-            WHOLE_PACKET,
-            SIZE
-        };
-    };
-
-
     /*
      * rtcp receive callback struct
      */
@@ -82,7 +69,7 @@ namespace iRtp {
         void*   user{nullptr};
 
         enum CallBackType{
-            APP_PACKET=0,
+            APP_PACKET,
             RECEIVER_REPORT,
             SENDER_REPORT,
             SDES_ITEM,
@@ -94,77 +81,34 @@ namespace iRtp {
 
     };
 
-    static const int  RTCP_MAX_CALLBACK_ITEM_SIZE=RtcpRcvCbData::SIZE;
-    static const int  RTP_MAX_CALLBACK_ITEM_SIZE=RtpRcvCbData::SIZE;
+    static const int  MAX_CALLBACK_ITEM_SIZE=RtcpRcvCbData::SIZE;
 
     class RtpSessionMpl {
     public:
         /*
          * finish initializing list
          */
-        RtpSessionMpl() : m_bStopFlag(false),m_pThread(nullptr),m_isWaking(false){}
+        RtpSessionMpl() : m_bStopFlag(false){}
 
         /*
          * it will do nothing. just to ensure that inherit object pointer or reference run destructor function
          * */
-        virtual ~RtpSessionMpl() {
-            if(!m_bStopFlag)Stop();
-        }
+        virtual ~RtpSessionMpl() {}
 
         /*
          * initialize something such as ip,port ,payloadType and so on
          * */
         virtual bool Init(const RtpSessionInitData *pInitData) = 0;
 
-
         /*
-         * start session
-         */
-        virtual bool Start(){return true;}
-
-        /*
-         * initialize thread and enter loop which inherit decide specific action
+         * it all depends on inherit object.may be not useful or just start tasks
          * */
-        bool Loop() {
-            if(m_pThread)Stop(); //if exist then stop and delete
-
-            bool haveTask=false;
-            for(int i=0;i<RTP_MAX_CALLBACK_ITEM_SIZE;i++){
-                if(m_rtpRcvCbDataArr[i].cb!= nullptr){
-                    haveTask=true;
-                    break;
-                }
-            }
-
-            if(!haveTask){
-                std::cerr<<LOG_FIXED_HEADER()<<"There is not a rtp receive callback function in the array."<<std::endl;
-                return false;
-            }
-
-            m_pThread=new std::thread(&RtpSessionMpl::loop,this);
-            m_isWaking=true;
-
-            return true;
-
-        };
-
+        virtual bool Start() = 0;
 
         /*
-         * stop rtp schedule task and handle inherit stop function.
+         * it all depends on inherit object.may be not useful or just stop tasks
          * */
-        bool Stop(){
-            m_bStopFlag=true;
-            tryToWakeUp();
-
-            if(m_pThread){
-                std::this_thread::sleep_for(std::chrono::nanoseconds (1)); //ns out of the piece of time
-                if(m_pThread->joinable())m_pThread->join();
-                delete m_pThread;
-                m_pThread=nullptr;
-            }
-
-            return stop(); //caller thread should inherit stop
-        }
+        virtual bool Stop() = 0;
 
         /*
          * send data
@@ -252,7 +196,7 @@ namespace iRtp {
          * @return true if success or false
          */
         inline bool RegisterRtcpRcvCb(int type,RtcpRcvCb cb,void* user){
-            if(type>=RTCP_MAX_CALLBACK_ITEM_SIZE || type<0){
+            if(type>=MAX_CALLBACK_ITEM_SIZE || type<0){
                 std::cout<<"The type is invalid."<<std::endl;
                 return false;
             }
@@ -263,35 +207,11 @@ namespace iRtp {
         }
 
         /*
-       * Register rtp receive callback function.
-       * @param [in] type:rtcp type
-       * @param [in] cb:handler
-       * @return true if success or false
-       */
-        inline bool RegisterRtpRcvCb(int type,RcvCb cb,void* user){
-            if(type>=RTCP_MAX_CALLBACK_ITEM_SIZE || type<0){
-                std::cout<<"The type is invalid."<<std::endl;
-                return false;
-            }
-            m_rtpRcvCbDataArr[type].cb=cb;
-            m_rtpRcvCbDataArr[type].user=user;
-
-            return true;
-        }
-
-        /*
          * GetRtcpRcvCbData
          * @param [in] type:rtcp type
          * @return the callback function
          */
-        RtcpRcvCbData* GetRtcpRcvCbData(int t){return t<RTCP_MAX_CALLBACK_ITEM_SIZE ? &(m_rtcpRcvCbDataArr[t]):nullptr;}
-
-        /*
-         * GetRtpRcvCbData
-         * @param [in] type:rtp type
-         * @return the callback function
-         */
-        RtcpRcvCbData* GetRtpRcvCbData(int t){return t<RTP_MAX_CALLBACK_ITEM_SIZE ? &(m_rtcpRcvCbDataArr[t]):nullptr;}
+        RtcpRcvCbData* GetRtcpRcvCbData(int t){return t<MAX_CALLBACK_ITEM_SIZE ? &(m_rtcpRcvCbDataArr[t]):nullptr;}
 
         /*
          * rtcp packet without unpacking
@@ -422,7 +342,7 @@ namespace iRtp {
         }
         inline uint32_t GetRRDelaySinceLastSR(RtcpPacket* rp)const{
             RtcpRRPacket* p=static_cast<RtcpRRPacket*>(rp);
-            return p ? p->delaySinceLastSR: 0;
+            return p ? p->delaySinceLatSR: 0;
         }
 
         /*
@@ -451,36 +371,15 @@ namespace iRtp {
 
 
 
+
     protected:
-        virtual void loop()=0;
-        virtual bool stop()=0;
-
-        void tryToWakeUp(){
-            if(m_isWaking)return;
-            m_cv.notify_all();
-        }
-
-        void wait(){
-            std::unique_lock<std::mutex> lock(m_mutex);
-            m_isWaking=false;
-
-            m_cv.wait(lock);
-            m_isWaking=true;
-        }
-
-
-
+        std::atomic_bool    m_bStopFlag;
         RtpHeaderData       m_rtpHeaderData;
 
-        RtcpRcvCbData       m_rtcpRcvCbDataArr[RTCP_MAX_CALLBACK_ITEM_SIZE];
-        RtpRcvCbData        m_rtpRcvCbDataArr[RTP_MAX_CALLBACK_ITEM_SIZE];
+        RtcpRcvCbData       m_rtcpRcvCbDataArr[MAX_CALLBACK_ITEM_SIZE];
 
-        //rtp schedule
-        std::atomic_bool        m_bStopFlag;
-        std::thread*            m_pThread;
-        std::condition_variable m_cv;
-        std::mutex              m_mutex;
-        std::atomic_bool        m_isWaking;
+
+//        std::thread*        m_pWorkThread;    //
 
     };
 

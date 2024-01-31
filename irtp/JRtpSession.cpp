@@ -29,7 +29,7 @@ public:
 	 *  RTPSession::OnValidatedRTPPacket function should be used.
 	 */
     virtual void OnRTPPacket(RTPPacket *pack,const RTPTime &receivetime, const RTPAddress *senderaddress){
-
+          m_pRefJRtpSession->TryToWakeUp();  //notify there is data in the queue
 
 //        std::cout<<LOG_FIXED_HEADER()<<"receive rtp packet"<<std::endl;
     }
@@ -169,7 +169,7 @@ public:
         d.extendedHighestSequenceNumber=srcdat->RR_GetExtendedHighestSequenceNumber();
         d.jitter=srcdat->RR_GetJitter();
         d.lastSR=srcdat->RR_GetLastSRTimestamp();
-        d.delaySinceLatSR=srcdat->RR_GetDelaySinceLastSR();
+        d.delaySinceLastSR=srcdat->RR_GetDelaySinceLastSR();
         p->cb(&d,p->user);
 
 
@@ -327,10 +327,48 @@ bool JRtpSession::Init(const RtpSessionInitData *pInitData)
     return true;
 }
 
-bool JRtpSession::Start()
+void JRtpSession::loop()
 {
+    while (!m_bStopFlag){
+        m_pRtpSessionImpl->BeginDataAccess();
+        if(m_pRtpSessionImpl->GotoFirstSource()){
+            do{
+                RTPPacket* pkt;
+                while ((pkt=m_pRtpSessionImpl->GetNextPacket())!=0 && !m_bStopFlag){
+//                std::cout<<"Got packet with "
+//                         << "sequence number="<<pkt->GetExtendedSequenceNumber()
+//                         <<" from SSRC "<<pkt->GetSSRC()
+//                         <<std::endl;
+                    __updateRtpHeaderData(pkt);
 
-    return true;
+                    for(int i=0;i<RTP_MAX_CALLBACK_ITEM_SIZE;i++){
+                        RtpRcvCbData pf=m_rtpRcvCbDataArr[i];
+                        if(!pf.cb)continue;
+
+                        switch (i) {
+                            case pf.ONLY_PAYLOAD:
+                                pf.cb(pkt->GetPayloadData(),pkt->GetPayloadLength(),pkt->HasMarker(),pf.user);
+                                break;
+                            case pf.WHOLE_PACKET:
+                                pf.cb(pkt->GetPacketData(),pkt->GetPacketLength(),pkt->HasMarker(),pf.user);
+                                break;
+                            default:
+                                break;
+                        }//switch
+                    }//for
+
+                    m_pRtpSessionImpl->DeletePacket(pkt);
+                }
+
+            }while(m_pRtpSessionImpl->GotoNextSource() && !m_bStopFlag);
+        }
+        m_pRtpSessionImpl->EndDataAccess();
+
+        wait(); //for next time
+
+    }//while
+
+
 }
 
 int JRtpSession::SendDataWithTs(const uint8_t *buf, int len, uint32_t pts, uint16_t marker)
@@ -412,10 +450,12 @@ int JRtpSession::RcvDataWithTs(uint8_t *buf, int len, uint32_t ts,RcvCb rcvCb,vo
     return RcvData(buf,len,rcvCb,user);
 }
 
-bool JRtpSession::Stop()
+bool JRtpSession::stop()
 {
-    m_bStopFlag=true;
-    m_pRtpSessionImpl->BYEDestroy(0,"time is up",10);
+    if(m_pRtpSessionImpl){
+        m_pRtpSessionImpl->BYEDestroy(0,"time is up",10);
+    }
+
     return true;
 }
 

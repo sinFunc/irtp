@@ -23,6 +23,21 @@ int rcvCb(const uint8_t* buf,int len,int marker,void* user)
     return len;
 }
 
+int rtpRcvPayloadCb(const uint8_t* buf,int len,int marker,void* user)
+{
+    iRtp::RtpSessionMpl* p=static_cast<iRtp::RtpSessionMpl*>(user);
+
+    std::cout<<LOG_FIXED_HEADER()<<"seq="<<p->GetRtpHeaderData().seq<<";ts="<<p->GetRtpHeaderData().ts<<":the len of receiving payload data="<<len<<std::endl;
+    return len;
+}
+int rtpRcvPacketCb(const uint8_t* buf,int len,int marker,void* user)
+{
+    iRtp::RtpSessionMpl* p=static_cast<iRtp::RtpSessionMpl*>(user);
+
+    std::cout<<LOG_FIXED_HEADER()<<"seq="<<p->GetRtpHeaderData().seq<<";ts="<<p->GetRtpHeaderData().ts<<":the len of receiving packet data="<<len<<std::endl;
+    return len;
+}
+
 void rtcpAppRcvCb(void* rtcpPacket,void* user)
 {
     iRtp::RtpSessionMpl* p=static_cast<iRtp::RtpSessionMpl*>(user);
@@ -87,10 +102,13 @@ void RtcpSRRcvCb(void* rtcpPacket,void* user)
 
 }
 
+<<<<<<< HEAD
 
 
 
 
+=======
+>>>>>>> dev
 
 //test ortp lib and as a example
 int testORtp(const std::string& lIp="",int lPort=-1,const std::string& rIp="",int rPort=-1)
@@ -101,7 +119,7 @@ int testORtp(const std::string& lIp="",int lPort=-1,const std::string& rIp="",in
     assert(pSession);
 
     iRtp::RtpSessionInitData initData(lIp,rIp,lPort,rPort,96,90000);
-    if(!pSession->Init(&initData) || !pSession->Start()){
+    if(!pSession->Init(&initData)){
         std::cout<<LOG_FIXED_HEADER()<<" Try to init rtpSession but fail"<<std::endl;
         delete pSession;
         return -1;
@@ -130,14 +148,13 @@ int testORtp(const std::string& lIp="",int lPort=-1,const std::string& rIp="",in
 
 int testJRtp(const std::string& lIp="",int lPort=-1,const std::string& rIp="",int rPort=-1)
 {
-
     std::cout<<"Start jrtp test"<<std::endl;
 
     iRtp::RtpSessionMpl* pSession=new iRtp::JRtpSession;
     assert(pSession);
 
     iRtp::RtpSessionInitData initData(lIp,rIp,lPort,rPort,96,90000);
-    if(!pSession->Init(&initData) || !pSession->Start()){
+    if(!pSession->Init(&initData)){
         std::cout<<LOG_FIXED_HEADER()<<" Try to init rtpSession but fail"<<std::endl;
         delete pSession;
         return -1;
@@ -149,6 +166,12 @@ int testJRtp(const std::string& lIp="",int lPort=-1,const std::string& rIp="",in
     pSession->RegisterRtcpRcvCb(iRtp::RtcpRcvCbData::BYE_PACKET,RtcpByeRcvCb,pSession);
     pSession->RegisterRtcpRcvCb(iRtp::RtcpRcvCbData::RECEIVER_REPORT,RtcpRRRcvCb,pSession);
     pSession->RegisterRtcpRcvCb(iRtp::RtcpRcvCbData::SENDER_REPORT,RtcpSRRcvCb,pSession);
+<<<<<<< HEAD
+=======
+
+    pSession->RegisterRtpRcvCb(iRtp::RtpRcvCbData::ONLY_PAYLOAD,rtpRcvPayloadCb,pSession);
+    pSession->RegisterRtpRcvCb(iRtp::RtpRcvCbData::WHOLE_PACKET,rtpRcvPacketCb,pSession);
+>>>>>>> dev
 
     int repeat=30;
     uint8_t buf[100]={0};
@@ -159,14 +182,21 @@ int testJRtp(const std::string& lIp="",int lPort=-1,const std::string& rIp="",in
 
     uint8_t name[4]={'i','a','m','?'};
     pSession->SendRtcpAppData(1,name,buf,32);
+<<<<<<< HEAD
+=======
 
-    const int rcvLen=1400;
-    uint8_t rcvBuf[rcvLen];
-    while (!stopFlag){
-//        pSession->RcvData(rcvBuf,rcvLen,rcvCb,nullptr);
-        pSession->RcvPayloadData(rcvBuf,rcvLen,rcvCb,pSession);
-        sleep(1);
-    }
+//    const int rcvLen=1400;
+//    uint8_t rcvBuf[rcvLen];
+//    while (!stopFlag){
+////        pSession->RcvData(rcvBuf,rcvLen,rcvCb,nullptr);
+//        pSession->RcvPayloadData(rcvBuf,rcvLen,rcvCb,pSession);
+//        sleep(1);
+//    }
+
+    pSession->Loop();
+    pause();
+>>>>>>> dev
+
 
     pSession->Stop();
     delete pSession;

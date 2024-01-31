@@ -85,7 +85,10 @@ bool InitRtpSession(CRtpSessionManager* p,CRtpSessionInitData* pInitData)
 bool StartRtpSession(CRtpSessionManager* p)
 {
     return CheckRtpSessionMgrPointer(p) && p->pIml->Start();
-
+}
+bool LoopRtpSession(CRtpSessionManager* p)
+{
+    return CheckRtpSessionMgrPointer(p) && p->pIml->Loop();
 }
 bool StopRtpSession(CRtpSessionManager* p)
 {
@@ -110,6 +113,35 @@ int RcvDataRtpSession(CRtpSessionManager* p,uint8_t* buf,int len,CRcvCb rcvCb,vo
 {
     return CheckRtpSessionMgrPointer(p) ? p->pIml->RcvData(buf,len,rcvCb,user) : 0;
 }
+
+bool RegisterRtpRcvCb(CRtpSessionManager* p,int type,void* cb,void* user)
+{
+    if(type>=RtpRcvCbData::SIZE){
+        std::cerr<<LOG_FIXED_HEADER()<<"The type is invalid."<<std::endl;
+        return false;
+    }
+
+    if(!cb){
+        std::cerr<<LOG_FIXED_HEADER()<<"The callback function is invalid."<<std::endl;
+        return false;
+    }
+
+    RtpRcvCb pf=(RtpRcvCb)(cb);
+    if(!pf){
+        std::cerr<<LOG_FIXED_HEADER()<<"The callback function pointer is invalid."<<std::endl;
+        return false;
+    }
+    return CheckRtpSessionMgrPointer(p) && p->pIml->RegisterRtpRcvCb(type,pf,user);
+}
+bool RegisterRtpOnlyPayloadRcvCb(CRtpSessionManager* p,void* cb,void* user)
+{
+    return RegisterRtpRcvCb(p,RtpRcvCbData::ONLY_PAYLOAD,cb,user);
+}
+bool RegisterRtpPacketRcvCb(CRtpSessionManager* p,void* cb,void* user)
+{
+    return RegisterRtpRcvCb(p,RtpRcvCbData::WHOLE_PACKET,cb,user);
+}
+
 
 bool RegisterRtcpRcvCb(CRtpSessionManager* p,int type,void* cb,void* user)
 {

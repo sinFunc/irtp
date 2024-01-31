@@ -15,10 +15,14 @@ extern "C" {
 typedef struct CRtpSessionManager CRtpSessionManager;
 typedef struct CRtpSessionInitData CRtpSessionInitData;
 
+//rtp callback function
 typedef int (*CRcvCb)(const uint8_t *buf, int len, int marker, void *user);
 int RcvCb(uint8_t *buf, int len, int marker, void *user); //ensure the same function name when define with go language
+typedef CRcvCb CRtpRcvCb;
+int RtcpPayloadRcvCb(uint8_t *buf, int len, int marker, void *user);
+int RtcpPacketRcvCb(uint8_t *buf, int len, int marker, void *user);
 
-//typedef struct CRtcpPacket CRtcpPacket;
+//rtcp callback function
 typedef void (*CRtcpRcvCb)(void* rtcpPacket,void* user);
 void RtcpAppPacketRcvCb(void* rtcpPacket,void* user);
 void RtcpRRPacketRcvCb(void* rtcpPacket,void* user);
@@ -41,6 +45,7 @@ CRtpSessionManager* CreateRtpSession(CRtpSessionType t);
 void DestroyRtpSession(CRtpSessionManager* p);
 bool InitRtpSession(CRtpSessionManager* p,CRtpSessionInitData* pInitData);
 bool StartRtpSession(CRtpSessionManager* p);
+bool LoopRtpSession(CRtpSessionManager* p);
 bool StopRtpSession(CRtpSessionManager* p);
 int SendDataRtpSession(CRtpSessionManager* p,const uint8_t* buf,int len,uint16_t marker);
 int RcvDataRtpSession(CRtpSessionManager* p,uint8_t* buf,int len,CRcvCb rcvCb,void* user);
@@ -48,13 +53,23 @@ int SendDataWithTsRtpSession(CRtpSessionManager* p,const uint8_t* buf,int len,ui
 int RcvDataWithTsRtpSession(CRtpSessionManager* p,uint8_t* buf,int len,uint32_t ts,CRcvCb rcvCb,void* user);
 
 /*
+ * rtcp register
+ * @type:
+ * @cb:it should be CRtcpRcv type or occur a error
+ */
+bool RegisterRtpRcvCb(CRtpSessionManager* p,int type,void* cb,void* user);
+/*
+ * register specific rtp callback interface
+ */
+bool RegisterRtpOnlyPayloadRcvCb(CRtpSessionManager* p,void* cb,void* user);
+bool RegisterRtpPacketRcvCb(CRtpSessionManager* p,void* cb,void* user);
+
+/*
  * rtcp initialized interface
  * @type:
  * @cb:it should be CRtcpRcv type or occur a error
  */
 bool RegisterRtcpRcvCb(CRtpSessionManager* p,int type,void* cb,void* user);
-
-
 /*
  * register specific rtcp packet callback interface
  */

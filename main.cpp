@@ -110,13 +110,6 @@ void RtcpOriginRcvCb(void* rtcpPacket,void* user)
     std::cout<<LOG_FIXED_HEADER()<<"origin rtcp packet.len="<<p->GetPacketDataLength(rp)<<std::endl;
 }
 
-<<<<<<< HEAD
-
-
-
-
-=======
->>>>>>> dev
 
 //test ortp lib and as a example
 int testORtp(const std::string& lIp="",int lPort=-1,const std::string& rIp="",int rPort=-1)
@@ -175,16 +168,10 @@ int testJRtp(const std::string& lIp="",int lPort=-1,const std::string& rIp="",in
     pSession->RegisterRtcpRcvCb(iRtp::RtcpRcvCbData::BYE_PACKET,RtcpByeRcvCb,pSession);
     pSession->RegisterRtcpRcvCb(iRtp::RtcpRcvCbData::RECEIVER_REPORT,RtcpRRRcvCb,pSession);
     pSession->RegisterRtcpRcvCb(iRtp::RtcpRcvCbData::SENDER_REPORT,RtcpSRRcvCb,pSession);
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-=======
     pSession->RegisterRtcpRcvCb(iRtp::RtcpRcvCbData::ORIGIN,RtcpOriginRcvCb,pSession);
->>>>>>> dev
 
     pSession->RegisterRtpRcvCb(iRtp::RtpRcvCbData::ONLY_PAYLOAD,rtpRcvPayloadCb,pSession);
     pSession->RegisterRtpRcvCb(iRtp::RtpRcvCbData::WHOLE_PACKET,rtpRcvPacketCb,pSession);
->>>>>>> dev
 
 
     pSession->Loop();
@@ -198,8 +185,6 @@ int testJRtp(const std::string& lIp="",int lPort=-1,const std::string& rIp="",in
 
     uint8_t name[4]={'i','a','m','?'};
     pSession->SendRtcpAppData(1,name,buf,32);
-<<<<<<< HEAD
-=======
 
 //    const int rcvLen=1400;
 //    uint8_t rcvBuf[rcvLen];
@@ -209,13 +194,7 @@ int testJRtp(const std::string& lIp="",int lPort=-1,const std::string& rIp="",in
 //        sleep(1);
 //    }
 
-<<<<<<< HEAD
-    pSession->Loop();
-    pause();
->>>>>>> dev
-=======
     pause(); //block main thread
->>>>>>> dev
 
 
     pSession->Stop();

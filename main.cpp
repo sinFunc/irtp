@@ -101,6 +101,14 @@ void RtcpSRRcvCb(void* rtcpPacket,void* user)
     std::cout<<LOG_FIXED_HEADER()<<"sender packet count="<<p->GetSRSenderPacketCount(rp)<<std::endl;
 
 }
+void RtcpOriginRcvCb(void* rtcpPacket,void* user)
+{
+    iRtp::RtpSessionMpl* p=static_cast<iRtp::RtpSessionMpl*>(user);
+
+    iRtp::RtcpPacket* rp=static_cast<iRtp::RtcpPacket*>(rtcpPacket);
+
+    std::cout<<LOG_FIXED_HEADER()<<"origin rtcp packet.len="<<p->GetPacketDataLength(rp)<<std::endl;
+}
 
 
 //test ortp lib and as a example
@@ -147,6 +155,7 @@ int testJRtp(const std::string& lIp="",int lPort=-1,const std::string& rIp="",in
     assert(pSession);
 
     iRtp::RtpSessionInitData initData(lIp,rIp,lPort,rPort,96,90000);
+    initData.AddPairsParam("receiveBufferSize",std::to_string(1024*1024*2));
     if(!pSession->Init(&initData)){
         std::cout<<LOG_FIXED_HEADER()<<" Try to init rtpSession but fail"<<std::endl;
         delete pSession;
@@ -159,6 +168,7 @@ int testJRtp(const std::string& lIp="",int lPort=-1,const std::string& rIp="",in
     pSession->RegisterRtcpRcvCb(iRtp::RtcpRcvCbData::BYE_PACKET,RtcpByeRcvCb,pSession);
     pSession->RegisterRtcpRcvCb(iRtp::RtcpRcvCbData::RECEIVER_REPORT,RtcpRRRcvCb,pSession);
     pSession->RegisterRtcpRcvCb(iRtp::RtcpRcvCbData::SENDER_REPORT,RtcpSRRcvCb,pSession);
+    pSession->RegisterRtcpRcvCb(iRtp::RtcpRcvCbData::ORIGIN,RtcpOriginRcvCb,pSession);
 
     pSession->RegisterRtpRcvCb(iRtp::RtpRcvCbData::ONLY_PAYLOAD,rtpRcvPayloadCb,pSession);
     pSession->RegisterRtpRcvCb(iRtp::RtpRcvCbData::WHOLE_PACKET,rtpRcvPacketCb,pSession);

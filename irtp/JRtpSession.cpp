@@ -35,20 +35,26 @@ public:
     }
 
     /** Is called when an incoming RTCP packet is about to be processed. */
-//    virtual void OnRTCPCompoundPacket(RTCPCompoundPacket *pack,const RTPTime &receivetime,
-//                                      const RTPAddress *senderaddress){
-//        //provide interface to user to get origin rtcp data
-//        RtcpRcvCbData* p=m_pRefJRtpSession->GetRtcpRcvCbData(RtcpRcvCbData::UNKNOWN);
-//        if(!p->cb){ //ignore.because it is not necessary for application layer
-//            return;
-//        }
-//
-//
-//
-//
-//
-//        //std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
-//    }
+    virtual void OnRTCPCompoundPacket(RTCPCompoundPacket *pack,const RTPTime &receivetime,
+                                      const RTPAddress *senderaddress){
+        //provide interface to user to get origin rtcp data
+        RtcpRcvCbData* pf=m_pRefJRtpSession->GetRtcpRcvCbData(RtcpRcvCbData::ORIGIN);
+        if(!pf->cb){ //ignore.because it is not necessary for application layer
+            return;
+        }
+
+        pack->GotoFirstPacket(); //reset
+        RTCPPacket* rp;
+        RtcpPacket d;
+        while ((rp=pack->GetNextPacket())!=0){
+            d.data=rp->GetPacketData();
+            d.dataLen=rp->GetPacketLength();
+            pf->cb(&d,pf->user);
+        }//while
+
+
+        //std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
+    }
 
     /** Is called when an SSRC collision was detected.
      *  Is called when an SSRC collision was detected. The instance \c srcdat is the one present in
@@ -101,6 +107,7 @@ public:
         d.name=apppacket->GetName();
         d.ssrc=apppacket->GetSSRC();
         d.subType=apppacket->GetSubType();
+        //d.packetLen=d.appDataLen+
 
         p->cb(&d,p->user);
 
@@ -313,6 +320,7 @@ bool JRtpSession::Init(const RtpSessionInitData *pInitData)
             if(s<=0){
                 std::cout<<LOG_FIXED_HEADER()<<" The size of receiveBufSize expected is invalid."<<std::endl;
             } else{
+//                std::cout<<LOG_FIXED_HEADER()<<" The size of receiveBufSize="<<s<<std::endl;
                 m_pTransParams->SetRTPReceiveBuffer(s);
             }
         }else{

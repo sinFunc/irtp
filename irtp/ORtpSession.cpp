@@ -71,17 +71,36 @@ void ORtpSession::StaticInit()
     ++gStaticInitCount;
 }
 
-bool ORtpSession::Start()
+void ORtpSession::loop()
 {
+    const int LEN=1500;
+    uint8_t buf[LEN];
+    while (!m_bStopFlag){
+        for(int i=0;i<RTP_MAX_CALLBACK_ITEM_SIZE;i++) {
+            RtpRcvCbData pf = m_rtpRcvCbDataArr[i];
+            if (!pf.cb)continue;
 
-    return true;
+            switch (i) {
+                case pf.ONLY_PAYLOAD:
+                    RcvPayloadData(buf,LEN,pf.cb,pf.user);
+                    break;
+                case pf.WHOLE_PACKET:
+                    RcvData(buf,LEN,pf.cb,pf.user);
+                    break;
+                default:
+                    break;
+            }//switch
+
+        }//for
+
+    }//while
+
+
 }
 
 
-bool ORtpSession::Stop()
+bool ORtpSession::stop()
 {
-    m_bStopFlag=true;
-
     if(m_pRtpSession){
         rtp_session_destroy(m_pRtpSession);
         m_pRtpSession=nullptr;
@@ -147,7 +166,7 @@ int ORtpSession::RcvPayloadData(uint8_t *buf, int len, RcvCb rcvCb, void *user)
         int ret=rtp_session_recvfrom(m_pRtpSession,true,mp,0,(struct sockaddr*)&remoteAddr,&addLen);
         if(ret<=0){
             freeb(mp);
-            return 0;
+            return rcvLen;
         }
 
         char* remoteIp= inet_ntoa(remoteAddr.sin_addr);
@@ -197,7 +216,7 @@ int ORtpSession::RcvData(uint8_t *buf, int len, RcvCb rcvCb, void *user)
         int ret=rtp_session_recvfrom(m_pRtpSession,true,mp,0,(struct sockaddr*)&remoteAddr,&addLen);
         if(ret<=0){
             freeb(mp);
-            return 0;
+            return rcvLen;
         }
 
         char* remoteIp= inet_ntoa(remoteAddr.sin_addr);

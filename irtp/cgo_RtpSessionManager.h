@@ -24,6 +24,7 @@ int RtcpPacketRcvCb(uint8_t *buf, int len, int marker, void *user);
 
 //rtcp callback function
 typedef void (*CRtcpRcvCb)(void* rtcpPacket,void* user);
+void RtcpOriginPacketRcvCb(void* rtcpPacket,void* user);
 void RtcpAppPacketRcvCb(void* rtcpPacket,void* user);
 void RtcpRRPacketRcvCb(void* rtcpPacket,void* user);
 void RtcpSRPacketRcvCb(void* rtcpPacket,void* user);
@@ -73,6 +74,7 @@ bool RegisterRtcpRcvCb(CRtpSessionManager* p,int type,void* cb,void* user);
 /*
  * register specific rtcp packet callback interface
  */
+bool RegisterOriginPacketRcvCb(CRtpSessionManager* p,void* cb,void* user); //but we dont recommend use this interface,because there is low performance
 bool RegisterAppPacketRcvCb(CRtpSessionManager* p,void* cb,void* user);
 bool RegisterRRPacketRcvCb(CRtpSessionManager* p,void* cb,void* user);
 bool RegisterSRPacketRcvCb(CRtpSessionManager* p,void* cb,void* user);
@@ -80,6 +82,8 @@ bool RegisterSdesItemRcvCb(CRtpSessionManager* p,void* cb,void* user);
 bool RegisterSdesPrivateItemRcvCb(CRtpSessionManager* p,void* cb,void* user);
 bool RegisterByePacketRcvCb(CRtpSessionManager* p,void* cb,void* user);
 bool RegisterUnKnownPacketRcvCb(CRtpSessionManager* p,void* cb,void* user);
+
+
 
 
 /*
@@ -101,7 +105,7 @@ CRtpSessionInitData* SetClockRate(CRtpSessionInitData* p,int cr);
  * support k-v:
  * 1.receiveBufferSize:10000 (byte)
  */
-CRtpSessionInitData* addPairsParams(CRtpSessionInitData* p,const char* key,const char* value);
+CRtpSessionInitData* AddPairsParams(CRtpSessionInitData* p,const char* key,const char* value);
 
 
 
@@ -121,9 +125,9 @@ uint8_t  GetCC(void* p);
 /*
  * rtcp origin packet interface
  */
-//uint8_t* GetRtcpPacketData(void* p,void* rtcpPacket);
-//int GetPacketDataLength(void* p,void* rtcpPacket);
-//uint32_t GetSSRC(void* p,void* rtcpPacket);
+uint8_t* GetRtcpPacketData(void* p,void* rtcpPacket);
+int GetPacketDataLength(void* p,void* rtcpPacket);
+uint32_t GetSSRC(void* p,void* rtcpPacket);
 
 /*
  * rtcp app packet

@@ -163,6 +163,7 @@ bool RegisterRtcpRcvCb(CRtpSessionManager* p,int type,void* cb,void* user)
     return CheckRtpSessionMgrPointer(p) && p->pIml->RegisterRtcpRcvCb(type,pf,user);
 
 }
+bool RegisterOriginPacketRcvCb(CRtpSessionManager* p,void* cb,void* user){return RegisterRtcpRcvCb(p,RtcpRcvCbData::ORIGIN,cb,user);}
 bool RegisterAppPacketRcvCb(CRtpSessionManager* p,void* cb,void* user){return RegisterRtcpRcvCb(p,RtcpRcvCbData::APP_PACKET,cb,user);}
 bool RegisterRRPacketRcvCb(CRtpSessionManager* p,void* cb,void* user){return RegisterRtcpRcvCb(p,RtcpRcvCbData::RECEIVER_REPORT,cb,user);}
 bool RegisterSRPacketRcvCb(CRtpSessionManager* p,void* cb,void* user){return RegisterRtcpRcvCb(p,RtcpRcvCbData::SENDER_REPORT,cb,user);}
@@ -226,7 +227,7 @@ CRtpSessionInitData* SetClockRate(CRtpSessionInitData* p,int cr){
     if(p)p->clockRate=cr;
     return p;
 }
-CRtpSessionInitData* addPairsParams(CRtpSessionInitData* p,const char* key,const char* value){
+CRtpSessionInitData* AddPairsParams(CRtpSessionInitData* p,const char* key,const char* value){
     if(!key || !value){
         std::cerr<<LOG_FIXED_HEADER()<<"The key or value is invalid."<<std::endl;
         return p;
@@ -309,27 +310,26 @@ static inline RtcpPacket* checkRtcpPacketPointer(void* p){
 
 }
 /*
- * origin rtcp data.but disable now.
- * enable when work task need
+ * origin rtcp data.
  */
-//uint8_t* GetRtcpPacketData(void* p,void* rtcpPacket){
-//    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
-//    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
-//
-//    return (imp && rp) ? imp->GetPacketData(rp) : nullptr;
-//}
-//int GetPacketDataLength(void* p,void* rtcpPacket){
-//    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
-//    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
-//
-//    return (imp && rp) ? imp->GetPacketDataLength(rp) : 0;
-//}
-//uint32_t GetSSRC(void* p,void* rtcpPacket){
-//    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
-//    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
-//
-//    return (imp && rp) ? imp->GetSSRC(rp) : 0;
-//}
+uint8_t* GetRtcpPacketData(void* p,void* rtcpPacket){
+    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
+    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+
+    return (imp && rp) ? imp->GetPacketData(rp) : nullptr;
+}
+int GetPacketDataLength(void* p,void* rtcpPacket){
+    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
+    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+
+    return (imp && rp) ? imp->GetPacketDataLength(rp) : 0;
+}
+uint32_t GetSSRC(void* p,void* rtcpPacket){
+    RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);
+    const RtpSessionMpl *imp = checkRtpSessionMpl(p);
+
+    return (imp && rp) ? imp->GetSSRC(rp) : 0;
+}
 
 uint8_t* GetAppData(void* p,void*rtcpPacket){
     RtcpPacket* rp= checkRtcpPacketPointer(rtcpPacket);

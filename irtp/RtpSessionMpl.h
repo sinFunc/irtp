@@ -89,6 +89,7 @@ namespace iRtp {
             SDES_ITEM,
             SDES_PRIVATE_ITEM,
             BYE_PACKET,
+            ORIGIN,
             UNKNOWN,
             SIZE
         };

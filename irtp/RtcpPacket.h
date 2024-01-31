@@ -5,8 +5,8 @@
 #ifndef IRTP_RTCPPACKET_H
 #define IRTP_RTCPPACKET_H
 #include "ICommon.h"
-#include <string.h>
-#include <list>
+//#include <string.h>
+//#include <list>
 
 //#include "rtcpsdespacket.h"
 
@@ -20,7 +20,6 @@ public:
     uint8_t* data; //reference.
     int dataLen;
     uint32_t ssrc;
-
 };
 
 class RtcpAppPacket:public RtcpPacket{

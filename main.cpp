@@ -163,6 +163,9 @@ int testJRtp(const std::string& lIp="",int lPort=-1,const std::string& rIp="",in
     pSession->RegisterRtpRcvCb(iRtp::RtpRcvCbData::ONLY_PAYLOAD,rtpRcvPayloadCb,pSession);
     pSession->RegisterRtpRcvCb(iRtp::RtpRcvCbData::WHOLE_PACKET,rtpRcvPacketCb,pSession);
 
+
+    pSession->Loop();
+
     int repeat=30;
     uint8_t buf[100]={0};
 //    uint8_t buf[]={0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x10,0x11,0x12,0x13,0x14,0x15,0x16,0x17,0x18,0x19,0x20};
@@ -181,8 +184,7 @@ int testJRtp(const std::string& lIp="",int lPort=-1,const std::string& rIp="",in
 //        sleep(1);
 //    }
 
-    pSession->Loop();
-    pause();
+    pause(); //block main thread
 
 
     pSession->Stop();

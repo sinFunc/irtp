@@ -60,6 +60,7 @@ namespace iRtp {
      * define rtp or rtcp receive callback function
      */
     typedef int (*RcvCb)(const uint8_t *buf, int len, int marker, void *user);
+    typedef RcvCb RtpRcvCb;
     typedef void (*RtcpRcvCb)(void* rtcpPacket,void* user);
 
     struct RtpRcvCbData{
@@ -107,9 +108,7 @@ namespace iRtp {
         /*
          * it will do nothing. just to ensure that inherit object pointer or reference run destructor function
          * */
-        virtual ~RtpSessionMpl() {
-            if(!m_bStopFlag)Stop();
-        }
+        virtual ~RtpSessionMpl() {}
 
         /*
          * initialize something such as ip,port ,payloadType and so on
@@ -124,6 +123,7 @@ namespace iRtp {
 
         /*
          * initialize thread and enter loop which inherit decide specific action
+         * notice:dont block caller thread and return immediately
          * */
         bool Loop() {
             if(m_pThread)Stop(); //if exist then stop and delete

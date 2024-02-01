@@ -11,6 +11,7 @@
 #include "rtptimeutilities.h"
 #include "rtcpapppacket.h"
 #include "rtpinternalsourcedata.h"
+#include "rtprawpacket.h"
 
 
 using namespace jrtplib;
@@ -244,6 +245,49 @@ public:
 //    virtual void OnSendRTCPCompoundPacket(RTCPCompoundPacket *pack){
 //        //std::cout<<LOG_FIXED_HEADER()<<"receive rtcp packet in "<<__func__ <<std::endl;
 //    }
+
+    /** If RTPSession::SetChangeOutgoingData was sent to true, overriding this you can change the
+     *  data packet that will actually be sent, for example adding encryption.
+     *  If RTPSession::SetChangeOutgoingData was sent to true, overriding this you can change the
+     *  data packet that will actually be sent, for example adding encryption.
+     *  Note that no memory management will be performed on the `senddata` pointer you fill in,
+     *  so if it needs to be deleted at some point you need to take care of this in some way
+     *  yourself, a good way may be to do this in RTPSession::OnSentRTPOrRTCPData. If `senddata` is
+     *  set to 0, no packet will be sent out. This also provides a way to turn off sending RTCP
+     *  packets if desired. */
+    virtual int OnChangeRTPOrRTCPData(const void *origdata, size_t origlen, bool isrtp, void **senddata, size_t *sendlen){
+//        std::cout<<LOG_FIXED_HEADER()<<"previous step when send rtp or rtcp data "<<__func__ <<std::endl;
+        if(isrtp) {
+            (*senddata)=const_cast<void*>(origdata);
+            *sendlen=origlen;
+        }
+
+        return 0;
+    }
+
+    /** This function is called when an RTP or RTCP packet was sent, it can be helpful
+    *  when data was allocated in RTPSession::OnChangeRTPOrRTCPData to deallocate it
+    *  here. */
+    virtual void OnSentRTPOrRTCPData(void *senddata, size_t sendlen, bool isrtp){}
+
+    /** By overriding this function, the raw incoming data can be inspected
+     *  and modified (e.g. for encryption).
+     *  By overriding this function, the raw incoming data can be inspected
+     *  and modified (e.g. for encryption). If the function returns `false`,
+     *  the packet is discarded.
+     */
+    virtual bool OnChangeIncomingData(RTPRawPacket *rawpack){
+//        std::cout<<LOG_FIXED_HEADER()<<"receive raw packet "<<__func__ <<std::endl;
+        return (!rawpack->IsRTP() && m_pRefJRtpSession->GetDisableRtcp()) ? false : true;
+    }
+
+
+    /*
+     * protected interface in RtpSession(jrtplib)
+     */
+    void SetChangeInData(bool change){ SetChangeIncomingData(change);}
+    void SetChangeOutData(bool change){ SetChangeOutgoingData(change);}
+
 
 private:
     JRtpSession*    m_pRefJRtpSession;
@@ -504,6 +548,17 @@ int JRtpSession::SendRawData(uint8_t *data, int len, bool isRtp)
     return m_pRtpSessionImpl->SendRawData(data,len,isRtp);
 }
 
+int JRtpSession::SetSessionBandwidth(double bw)
+{
+    return m_pRtpSessionImpl->SetSessionBandwidth(bw);
+}
+
+
+void JRtpSession::setDisableRtcp()
+{
+   m_pRtpSessionImpl->SetChangeInData(m_bDisableRtcp);
+   m_pRtpSessionImpl->SetChangeOutData(m_bDisableRtcp);
+}
 
 
 

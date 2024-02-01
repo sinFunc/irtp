@@ -173,6 +173,7 @@ int testJRtp(const std::string& lIp="",int lPort=-1,const std::string& rIp="",in
     pSession->RegisterRtpRcvCb(iRtp::RtpRcvCbData::ONLY_PAYLOAD,rtpRcvPayloadCb,pSession);
     pSession->RegisterRtpRcvCb(iRtp::RtpRcvCbData::WHOLE_PACKET,rtpRcvPacketCb,pSession);
 
+    pSession->SetDisableRtcp(true);
 
     pSession->Loop();
 

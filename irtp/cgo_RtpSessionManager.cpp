@@ -123,6 +123,11 @@ int SendRtpOrRtcpRawData(CRtpSessionManager* p,uint8_t* data,int len,bool isRtp)
     return CheckRtpSessionMgrPointer(p) ? p->pIml->SendRawData(data,len,isRtp) : 0 ;
 }
 
+void SetRtcpDisable(CRtpSessionManager* p,int disableRtcp)
+{
+    if(CheckRtpSessionMgrPointer(p)) p->pIml->SetDisableRtcp(disableRtcp!=0);
+}
+
 
 bool RegisterRtpRcvCb(CRtpSessionManager* p,int type,void* cb,void* user)
 {

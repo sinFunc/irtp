@@ -114,6 +114,16 @@ int RcvDataRtpSession(CRtpSessionManager* p,uint8_t* buf,int len,CRcvCb rcvCb,vo
     return CheckRtpSessionMgrPointer(p) ? p->pIml->RcvData(buf,len,rcvCb,user) : 0;
 }
 
+int SendRtcpAppData(CRtpSessionManager* p,uint8_t subType,const uint8_t name[4],const void* appData,int appDataLen)
+{
+    return CheckRtpSessionMgrPointer(p) ? p->pIml->SendRtcpAppData(subType,name,appData,appDataLen):0;
+}
+int SendRtpOrRtcpRawData(CRtpSessionManager* p,uint8_t* data,int len,bool isRtp)
+{
+    return CheckRtpSessionMgrPointer(p) ? p->pIml->SendRawData(data,len,isRtp) : 0 ;
+}
+
+
 bool RegisterRtpRcvCb(CRtpSessionManager* p,int type,void* cb,void* user)
 {
     if(type>=RtpRcvCbData::SIZE){

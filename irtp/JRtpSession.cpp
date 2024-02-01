@@ -499,6 +499,10 @@ int JRtpSession::SendRtcpAppData(uint8_t subType, const uint8_t *name, const voi
     return m_pRtpSessionImpl->SendRTCPAPPPacket(subType,name,appData,appDataLen);
 
 }
+int JRtpSession::SendRawData(uint8_t *data, int len, bool isRtp)
+{
+    return m_pRtpSessionImpl->SendRawData(data,len,isRtp);
+}
 
 
 

@@ -393,7 +393,7 @@ void JRtpSession::loop()
 //                         <<std::endl;
                     __updateRtpHeaderData(pkt);
 
-                    for(int i=0;i<RTP_MAX_CALLBACK_ITEM_SIZE;i++){
+                    for(int i=0;i<RTP_MAX_CALLBACK_ITEM_SIZE && !m_bStopFlag;i++){
                         RtpRcvCbData pf=m_rtpRcvCbDataArr[i];
                         if(!pf.cb)continue;
 
@@ -416,9 +416,11 @@ void JRtpSession::loop()
         }
         m_pRtpSessionImpl->EndDataAccess();
 
-        wait(); //for next time
+        if(!m_bStopFlag) wait(); //for next time
 
     }//while
+
+    std::cout<<LOG_FIXED_HEADER()<<"The rtp schedule thread quit successfully."<<std::endl;
 
 
 }

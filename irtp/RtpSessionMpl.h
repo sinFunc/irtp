@@ -109,7 +109,18 @@ namespace iRtp {
         /*
          * it will do nothing. just to ensure that inherit object pointer or reference run destructor function
          * */
-        virtual ~RtpSessionMpl() {}
+        virtual ~RtpSessionMpl() {
+            if(m_pThread){
+                if(m_pThread->joinable()){
+                    std::cerr<<LOG_FIXED_HEADER()<<" The rtp schedule thread does not quit and will try to join..."<<std::endl;
+                    m_pThread->join();
+                    std::this_thread::sleep_for(std::chrono::nanoseconds (1)); //ns out of the piece of time
+                }
+
+                delete m_pThread;
+                m_pThread=nullptr;
+            }
+        }
 
         /*
          * initialize something such as ip,port ,payloadType and so on
@@ -158,10 +169,7 @@ namespace iRtp {
             tryToWakeUp();
 
             if(m_pThread){
-                std::this_thread::sleep_for(std::chrono::nanoseconds (1)); //ns out of the piece of time
                 if(m_pThread->joinable())m_pThread->join();
-                delete m_pThread;
-                m_pThread=nullptr;
             }
 
             return stop(); //caller thread should inherit stop

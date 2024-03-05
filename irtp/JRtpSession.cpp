@@ -510,6 +510,10 @@ bool JRtpSession::stop()
         m_pRtpSessionImpl->BYEDestroy(0,"time is up",10);
     }
 
+    //wait 5 sec
+    std::cout<<LOG_FIXED_HEADER()<<"Stopping work,please wait..."<<std::endl;
+    std::this_thread::sleep_for(std::chrono::milliseconds(5200)); //ms
+
     return true;
 }
 

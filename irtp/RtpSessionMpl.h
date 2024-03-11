@@ -110,6 +110,8 @@ namespace iRtp {
          * it will do nothing. just to ensure that inherit object pointer or reference run destructor function
          * */
         virtual ~RtpSessionMpl() {
+            if(!m_bStopFlag)Stop();
+
             if(m_pThread){
                 if(m_pThread->joinable()){
                     std::cerr<<LOG_FIXED_HEADER()<<" The rtp schedule thread does not quit and will try to join..."<<std::endl;
@@ -154,7 +156,6 @@ namespace iRtp {
             }
 
             m_pThread=new std::thread(&RtpSessionMpl::loop,this);
-            m_isWaking=true;
 
             return true;
 
@@ -169,10 +170,10 @@ namespace iRtp {
             tryToWakeUp();
 
             if(m_pThread){
-                if(m_pThread->joinable())m_pThread->join();
+                if(m_pThread->joinable())m_pThread->join(); //block called thread
             }
 
-            return stop(); //caller thread should inherit stop
+            return  stop(); //caller thread should inherit stop
         }
 
         /*
@@ -480,6 +481,7 @@ namespace iRtp {
         virtual void setDisableRtcp(){}; //inherit class set specific config
 
         void tryToWakeUp(){
+//            std::unique_lock<std::mutex> lock(m_mutex);
             if(m_isWaking)return;
             m_cv.notify_all();
         }

@@ -3,6 +3,9 @@
 #include <signal.h>
 #include <time.h>
 #include <string>
+#include <list>
+#include <vector>
+#include <chrono>
 
 #include "ORtpSession.h"
 #include "JRtpSession.h"
@@ -151,6 +154,7 @@ int testJRtp(const std::string& lIp="",int lPort=-1,const std::string& rIp="",in
 {
     std::cout<<"Start jrtp test"<<std::endl;
 
+
     iRtp::RtpSessionMpl* pSession=new iRtp::JRtpSession;
     assert(pSession);
 
@@ -197,6 +201,8 @@ int testJRtp(const std::string& lIp="",int lPort=-1,const std::string& rIp="",in
 
     pause(); //block main thread
 
+//    std::this_thread::sleep_for(std::chrono::seconds(60));
+
 
     pSession->Stop();
     delete pSession;
@@ -205,7 +211,84 @@ int testJRtp(const std::string& lIp="",int lPort=-1,const std::string& rIp="",in
 }
 
 
+int testPerformance(const std::string& lIp="",int lPort=-1,const std::string& rIp="",int rPort=-1)
+{
 
+    std::cout<<"start performance test"<<std::endl;
+
+    std::atomic_bool stopFlag(false);
+
+    auto tf=[&](int taskNum){
+        iRtp::RtpSessionMpl* pSession=new iRtp::JRtpSession;
+        int incPort=taskNum*2;
+        iRtp::RtpSessionInitData initData(lIp,rIp,lPort+incPort,rPort+incPort,96,90000);
+        initData.AddPairsParam("receiveBufferSize",std::to_string(1024*1024*2));
+        if(!pSession->Init(&initData)){
+            std::cout<<LOG_FIXED_HEADER()<<" Try to init rtpSession but fail"<<std::endl;
+            delete pSession;
+            return -1;
+        }
+
+        pSession->RegisterRtcpRcvCb(iRtp::RtcpRcvCbData::APP_PACKET,rtcpAppRcvCb,pSession);
+        pSession->RegisterRtcpRcvCb(iRtp::RtcpRcvCbData::SDES_ITEM,RtcpSdesItemRcvCb,pSession);
+        pSession->RegisterRtcpRcvCb(iRtp::RtcpRcvCbData::SDES_PRIVATE_ITEM,RtcpSdesPrivateItemRcvCb,pSession);
+        pSession->RegisterRtcpRcvCb(iRtp::RtcpRcvCbData::BYE_PACKET,RtcpByeRcvCb,pSession);
+        pSession->RegisterRtcpRcvCb(iRtp::RtcpRcvCbData::RECEIVER_REPORT,RtcpRRRcvCb,pSession);
+        pSession->RegisterRtcpRcvCb(iRtp::RtcpRcvCbData::SENDER_REPORT,RtcpSRRcvCb,pSession);
+        pSession->RegisterRtcpRcvCb(iRtp::RtcpRcvCbData::ORIGIN,RtcpOriginRcvCb,pSession);
+
+        pSession->RegisterRtpRcvCb(iRtp::RtpRcvCbData::ONLY_PAYLOAD,rtpRcvPayloadCb,pSession);
+        pSession->RegisterRtpRcvCb(iRtp::RtpRcvCbData::WHOLE_PACKET,rtpRcvPacketCb,pSession);
+
+        pSession->SetDisableRtcp(false);
+
+        pSession->Loop(); //
+
+        uint8_t buf[200]={0};
+        while (!stopFlag){
+            pSession->SendData(buf,sizeof(buf),1);
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
+
+        }//while
+
+        pSession->Stop();
+        delete pSession;
+        return 0;
+    };
+
+
+    int taskNum=0, maxTasks=2000;
+    std::list<std::thread*> pt;
+    for(;taskNum<maxTasks;taskNum++){
+        pt.emplace_back(new std::thread(tf,taskNum));
+    }//for
+
+
+    pause(); //block main thread
+
+    stopFlag=true;
+//    std::this_thread::sleep_for(std::chrono::milliseconds (1000));
+
+    for(auto itr=pt.begin();itr!=pt.end();++itr){
+        if(*itr!= nullptr){
+            if((*itr)->joinable()){
+                (*itr)->join();
+            }
+
+            delete *itr;
+            *itr=nullptr;
+        }
+
+    }
+
+
+    return 0;
+
+//    ./IRtp localip=172.22.1.100 localport=60000 remoteip=172.22.1.202 remoteport=60000 option=2
+
+
+}
 
 int main(int agrc,char* agrv[])
 {
@@ -255,8 +338,25 @@ int main(int agrc,char* agrv[])
 
     }
 
-    int ret= option==0 ? testORtp(lip,lport,rip,rport) : testJRtp(lip,lport,rip,rport);
+    int ret=0;
+    const int TEST_ORTP=0,TEST_JRTP=1,TEST_PERFORMANCE=2;
+    switch (option) {
+        case TEST_ORTP:
+            ret=testORtp(lip,lport,rip,rport);
+            break;
+        case TEST_JRTP:
+            ret= testJRtp(lip,lport,rip,rport);
+            break;
+        case TEST_PERFORMANCE:
+            ret= testPerformance(lip,lport,rip,rport);
+            break;
+        default:
+            std::cerr<<LOG_FIXED_HEADER()<<"The type of option is invalid."<<std::endl;
+            break;
 
-    sleep(1);
+    }
+
+//    int ret= option==0 ? testORtp(lip,lport,rip,rport) : testJRtp(lip,lport,rip,rport);
+//    sleep(1);
     return ret;
 }

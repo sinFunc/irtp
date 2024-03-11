@@ -376,11 +376,16 @@ bool JRtpSession::Init(const RtpSessionInitData *pInitData)
     m_nPayloadType=pInitData->payloadType;
     m_nSndIncTs=pInitData->clockRate/pInitData->fps;
 
+    std::cout<<LOG_FIXED_HEADER()<<"Create rtp session successfully----"<<m_pTransParams->GetBindIP()<<":"
+    <<m_pTransParams->GetPortbase()<<std::endl;
+
     return true;
 }
 
 void JRtpSession::loop()
 {
+    m_isWaking=true;
+
     while (!m_bStopFlag){
         m_pRtpSessionImpl->BeginDataAccess();
         if(m_pRtpSessionImpl->GotoFirstSource()){
@@ -416,11 +421,11 @@ void JRtpSession::loop()
         }
         m_pRtpSessionImpl->EndDataAccess();
 
-        if(!m_bStopFlag) wait(); //for next time
+        if(!m_bStopFlag) wait();
 
     }//while
 
-    std::cout<<LOG_FIXED_HEADER()<<"The rtp schedule thread quit successfully."<<std::endl;
+    std::cout<<LOG_FIXED_HEADER()<<"The rtp schedule thread quit successfully.localPort="<<m_pTransParams->GetPortbase()<<std::endl;
 
 
 }
@@ -506,13 +511,19 @@ int JRtpSession::RcvDataWithTs(uint8_t *buf, int len, uint32_t ts,RcvCb rcvCb,vo
 
 bool JRtpSession::stop()
 {
+//    std::cout<<LOG_FIXED_HEADER()<<TimeStamp()<<"Trying to destroy rtp session...."<<m_pTransParams->GetBindIP()<<":"
+//                                              <<m_pTransParams->GetPortbase()<<std::endl;
+
     if(m_pRtpSessionImpl){
-        m_pRtpSessionImpl->BYEDestroy(0,"time is up",10);
+        m_pRtpSessionImpl->Destroy();
     }
 
+    std::cout<<LOG_FIXED_HEADER()<<TimeStamp()<<"Destroy rtp session successfully----"<<m_pTransParams->GetBindIP()<<":"
+             <<m_pTransParams->GetPortbase()<<std::endl;
+
     //wait 5 sec
-    std::cout<<LOG_FIXED_HEADER()<<"Stopping work,please wait..."<<std::endl;
-    std::this_thread::sleep_for(std::chrono::milliseconds(5200)); //ms
+//    std::cout<<LOG_FIXED_HEADER()<<"Stopping work,please wait..."<<std::endl;
+//    std::this_thread::sleep_for(std::chrono::milliseconds(5200)); //ms
 
     return true;
 }

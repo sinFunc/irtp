@@ -7,7 +7,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pthread")
 set(CMAKE_LIBRARY_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-as-needed")
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-option(LIB_MODE "build a library" ON)
+option(LIB_MODE "build a library" OFF)
 option(ENABLE_TESTER "run tester" OFF)
 
 message(STATUS "INSTALL_INCLUDE_DIR=${CMAKE_INSTALL_INCLUDEDIR}")
@@ -70,11 +70,6 @@ add_subdirectory(${ORTP})
 add_definitions(-DHAVE_CONFIG_H)
 include_directories(${ORTP_HEADERS})
 
-
-#--------------------IRtp-------------------------
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/irtp)
-aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/irtp IRTP_SRCS)
-
 #----------------------------compile jrtplib--------------------------------
 find_package(JThread QUIET)
 if(NOT JThread_FOUND)
@@ -113,6 +108,12 @@ endif()
 
 set(JRTP_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/JRtplib/JRTPLIB-3.11.2/src)
 include_directories(${JRTP_INCLUDE_DIR})
+#aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/JRtplib/JRTPLIB-3.11.2/src JRTP_SRCS)
+
+
+#--------------------IRtp-------------------------
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/irtp)
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/irtp IRTP_SRCS)
 
 
 set(ALL_SRCS ${IRTP_SRCS} ${ORTP_SRCS})
@@ -129,7 +130,7 @@ function(run_tester)
     target_link_libraries(${CMAKE_PROJECT_NAME}  PUBLIC ${IRTP_LIBS})
 #    target_link_libraries(${CMAKE_PROJECT_NAME}  PUBLIC bcunit  mbedtls bctoolbox)
 #    target_link_libraries(${CMAKE_PROJECT_NAME} PUBLIC jrtp jthread)
-    add_dependencies(${CMAKE_PROJECT_NAME} ${IRTP_PUBLIC_TARGET})
+#    add_dependencies(${CMAKE_PROJECT_NAME} ${IRTP_PUBLIC_TARGET})
 endfunction(run_tester)
 
 
@@ -218,6 +219,7 @@ ELSE()
     add_executable(${CMAKE_PROJECT_NAME} main.cpp ${ALL_SRCS})
     target_link_libraries(${CMAKE_PROJECT_NAME} PUBLIC bcunit  mbedtls bctoolbox)
     target_link_libraries(${CMAKE_PROJECT_NAME} PUBLIC jrtp jthread)
+#    target_link_libraries(${CMAKE_PROJECT_NAME} PUBLIC jthread)
 ENDIF()
 
 #add_dependencies(IRtp ${ORTP})

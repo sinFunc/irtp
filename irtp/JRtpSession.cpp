@@ -376,8 +376,8 @@ bool JRtpSession::Init(const RtpSessionInitData *pInitData)
     m_nPayloadType=pInitData->payloadType;
     m_nSndIncTs=pInitData->clockRate/pInitData->fps;
 
-    std::cout<<LOG_FIXED_HEADER()<<"Create rtp session successfully----"<<m_pTransParams->GetBindIP()<<":"
-    <<m_pTransParams->GetPortbase()<<std::endl;
+//    std::cout<<LOG_FIXED_HEADER()<<"Create rtp session successfully----"<<m_pTransParams->GetBindIP()<<":"
+//    <<m_pTransParams->GetPortbase()<<std::endl;
 
     return true;
 }
@@ -425,7 +425,7 @@ void JRtpSession::loop()
 
     }//while
 
-    std::cout<<LOG_FIXED_HEADER()<<"The rtp schedule thread quit successfully.localPort="<<m_pTransParams->GetPortbase()<<std::endl;
+//    std::cout<<LOG_FIXED_HEADER()<<"The rtp schedule thread quit successfully.localPort="<<m_pTransParams->GetPortbase()<<std::endl;
 
 
 }
@@ -518,8 +518,8 @@ bool JRtpSession::stop()
         m_pRtpSessionImpl->Destroy();
     }
 
-    std::cout<<LOG_FIXED_HEADER()<<TimeStamp()<<"Destroy rtp session successfully----"<<m_pTransParams->GetBindIP()<<":"
-             <<m_pTransParams->GetPortbase()<<std::endl;
+//    std::cout<<LOG_FIXED_HEADER()<<TimeStamp()<<"Destroy rtp session successfully----"<<m_pTransParams->GetBindIP()<<":"
+//             <<m_pTransParams->GetPortbase()<<std::endl;
 
     //wait 5 sec
 //    std::cout<<LOG_FIXED_HEADER()<<"Stopping work,please wait..."<<std::endl;

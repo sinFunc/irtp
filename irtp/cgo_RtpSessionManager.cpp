@@ -188,9 +188,11 @@ bool RegisterByePacketRcvCb(CRtpSessionManager* p,void* cb,void* user){return Re
 bool RegisterUnKnownPacketRcvCb(CRtpSessionManager* p,void* cb,void* user){{return RegisterRtcpRcvCb(p,RtcpRcvCbData::UNKNOWN,cb,user);}}
 
 
-
+/*
+ * @fps:the amount of divide a second into
+ */
 CRtpSessionInitData* CreateRtpSessionInitData(const char* localIp,const char* remoteIp,int localPort
-        ,int remotePort,int payloadType,int clockRate)
+        ,int remotePort,int payloadType,int clockRate,int fps)
 {
     CRtpSessionInitData* pi= new CRtpSessionInitData();
     assert(pi);
@@ -201,6 +203,7 @@ CRtpSessionInitData* CreateRtpSessionInitData(const char* localIp,const char* re
     pi->remotePort=remotePort;
     pi->payloadType=payloadType;
     pi->clockRate=clockRate;
+    pi->fps=fps;
 
     return pi;
 

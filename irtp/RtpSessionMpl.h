@@ -21,8 +21,8 @@ namespace iRtp {
 
     struct RtpSessionInitData {
         RtpSessionInitData(){}
-        RtpSessionInitData(const std::string& lip,const std::string& rip,int lport,int rport,int pt,int cr)
-        :localIp(lip),remoteIp(rip),localPort(lport),remotePort(rport),payloadType(pt),clockRate(cr){}
+        RtpSessionInitData(const std::string& lip,const std::string& rip,int lport,int rport,int pt,int cr,int f=25)
+        :localIp(lip),remoteIp(rip),localPort(lport),remotePort(rport),payloadType(pt),clockRate(cr),fps(f){}
         ~RtpSessionInitData(){
             if(!extraParams.empty())extraParams.clear();
         }

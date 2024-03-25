@@ -107,7 +107,7 @@ bool RegisterUnKnownPacketRcvCb(CRtpSessionManager* p,void* cb,void* user);
  * rtp session initialized param
  */
 CRtpSessionInitData*  CreateRtpSessionInitData(const char* localIp,const char* remoteIp,int localPort
-                                               ,int remotePort,int payloadType,int clockRate);
+                                               ,int remotePort,int payloadType,int clockRate,int fps);
 void DestroyRtpSessionInitData(CRtpSessionInitData* pi);
 
 CRtpSessionInitData* SetLocalIp(CRtpSessionInitData* p,const char* localIp);

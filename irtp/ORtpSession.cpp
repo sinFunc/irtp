@@ -123,7 +123,7 @@ void ORtpSession::StaticUnInit()
 
 }
 
-int ORtpSession::SendData(const uint8_t *buf, int len, uint16_t marker)
+int ORtpSession::SendData(const uint8_t *buf, int len, uint16_t marker,int pt)
 {
     m_nRcvPreviousTs=m_nRcvPreviousTs+m_nSndIncTs>UINT32_MAX ? 0 : m_nRcvPreviousTs+m_nSndIncTs;
 
@@ -132,7 +132,7 @@ int ORtpSession::SendData(const uint8_t *buf, int len, uint16_t marker)
 
 }
 
-int ORtpSession::SendDataWithTs(const uint8_t *buf, int len, uint32_t pts, uint16_t marker)
+int ORtpSession::SendDataWithTs(const uint8_t *buf, int len, uint32_t pts, uint16_t marker,int pt)
 {
     if(len<=0){
         std::cout<<LOG_FIXED_HEADER()<<" The len is invalid."<<std::endl;

@@ -376,7 +376,7 @@ bool JRtpSession::Init(const RtpSessionInitData *pInitData)
     m_nPayloadType=pInitData->payloadType;
     m_nSndIncTs=pInitData->clockRate/pInitData->fps;
 
-//    std::cout<<LOG_FIXED_HEADER()<<"Create rtp session successfully----"<<m_pTransParams->GetBindIP()<<":"
+//    std::cout<<LOG_FIXED_HEADER()<<VERSION<<"Create rtp session successfully----"<<m_pTransParams->GetBindIP()<<":"
 //    <<m_pTransParams->GetPortbase()<<std::endl;
 
     return true;
@@ -421,16 +421,18 @@ void JRtpSession::loop()
         }
         m_pRtpSessionImpl->EndDataAccess();
 
+//        std::cout<<LOG_FIXED_HEADER()<<"Enter wait status"<<m_pTransParams->GetPortbase()<<std::endl;
+
         if(!m_bStopFlag) wait();
 
     }//while
 
-//    std::cout<<LOG_FIXED_HEADER()<<"The rtp schedule thread quit successfully.localPort="<<m_pTransParams->GetPortbase()<<std::endl;
+    //std::cout<<LOG_FIXED_HEADER()<<"The rtp schedule thread quit successfully.localPort="<<m_pTransParams->GetPortbase()<<std::endl;
 
 
 }
 
-int JRtpSession::SendDataWithTs(const uint8_t *buf, int len, uint32_t pts, uint16_t marker)
+int JRtpSession::SendDataWithTs(const uint8_t *buf, int len, uint32_t pts, uint16_t marker,int pt)
 {
 
     uint32_t incPts= pts>m_nCurPts ? pts-m_nCurPts : 0;
@@ -440,17 +442,21 @@ int JRtpSession::SendDataWithTs(const uint8_t *buf, int len, uint32_t pts, uint1
 
     //std::cout<<LOG_FIXED_HEADER()<<"pts="<<pts<<";incPts="<<incPts<<std::endl;
 
-    return m_pRtpSessionImpl->SendPacket(buf,len,m_nPayloadType,marker,0);
+    int _pt=pt>=0 ? pt : m_nPayloadType;
+
+    return m_pRtpSessionImpl->SendPacket(buf,len,_pt,marker,0);
 
 
 }
 
-int JRtpSession::SendData(const uint8_t *buf, int len, uint16_t marker)
+int JRtpSession::SendData(const uint8_t *buf, int len, uint16_t marker,int pt)
 {
     uint32_t incPts= marker ? m_nSndIncTs : 0 ;
 
     m_pRtpSessionImpl->SetDefaultTimestampIncrement(incPts);
     m_pRtpSessionImpl->SetDefaultMark(marker);
+
+    if(pt>=0)m_pRtpSessionImpl->SetDefaultPayloadType(pt);
 
     return m_pRtpSessionImpl->SendPacket(buf,len);
 

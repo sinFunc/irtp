@@ -258,7 +258,7 @@ int testPerformance(const std::string& lIp="",int lPort=-1,const std::string& rI
     };
 
 
-    int taskNum=0, maxTasks=2000;
+    int taskNum=0, maxTasks=1000;
     std::list<std::thread*> pt;
     for(;taskNum<maxTasks;taskNum++){
         pt.emplace_back(new std::thread(tf,taskNum));
@@ -268,7 +268,7 @@ int testPerformance(const std::string& lIp="",int lPort=-1,const std::string& rI
     pause(); //block main thread
 
     stopFlag=true;
-//    std::this_thread::sleep_for(std::chrono::milliseconds (1000));
+    std::this_thread::sleep_for(std::chrono::milliseconds (1000));
 
     for(auto itr=pt.begin();itr!=pt.end();++itr){
         if(*itr!= nullptr){

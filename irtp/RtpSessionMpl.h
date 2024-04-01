@@ -182,9 +182,10 @@ namespace iRtp {
          * @param [in] len:the len of payload data
          * @param [in] pts:present timestamp
          * @param [in] marker:a flag bit for rtp
+         * @param [in] pt:payload type
          * @return the len of real send
          * */
-        virtual int SendData(const uint8_t *buf, int len, uint16_t marker) = 0;
+        virtual int SendData(const uint8_t *buf, int len, uint16_t marker,int pt=-1) = 0;
 
         /*
          * send data with ts
@@ -192,9 +193,10 @@ namespace iRtp {
          * @param [in] len:the len of payload data
          * @param [in] pts:present timestamp
          * @param [in] marker:a flag bit for rtp
+         * @param [in] pt:payload type
          * @return the len of real send
          * */
-        virtual int SendDataWithTs(const uint8_t *buf, int len, uint32_t pts, uint16_t marker) = 0;
+        virtual int SendDataWithTs(const uint8_t *buf, int len, uint32_t pts, uint16_t marker,int pt=-1) = 0;
 
 
         /*
@@ -481,7 +483,7 @@ namespace iRtp {
         virtual void setDisableRtcp(){}; //inherit class set specific config
 
         void tryToWakeUp(){
-//            std::unique_lock<std::mutex> lock(m_mutex);
+            std::unique_lock<std::mutex> lock(m_mutex);
             if(m_isWaking)return;
             m_cv.notify_all();
         }

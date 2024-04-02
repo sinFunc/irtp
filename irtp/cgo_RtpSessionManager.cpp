@@ -94,13 +94,13 @@ bool StopRtpSession(CRtpSessionManager* p)
 {
     return CheckRtpSessionMgrPointer(p) && p->pIml->Stop();
 }
-int SendDataWithTsRtpSession(CRtpSessionManager* p,const uint8_t* buf,int len,uint32_t pts,uint16_t marker)
+int SendDataWithTsRtpSession(CRtpSessionManager* p,const uint8_t* buf,int len,uint32_t pts,uint16_t marker,int pt)
 {
-    return CheckRtpSessionMgrPointer(p) ? p->pIml->SendDataWithTs(buf,len,pts,marker) : 0 ;
+    return CheckRtpSessionMgrPointer(p) ? p->pIml->SendDataWithTs(buf,len,pts,marker,pt) : 0 ;
 }
-int SendDataRtpSession(CRtpSessionManager* p,const uint8_t* buf,int len,uint16_t marker)
+int SendDataRtpSession(CRtpSessionManager* p,const uint8_t* buf,int len,uint16_t marker,int pt)
 {
-    return CheckRtpSessionMgrPointer(p) ? p->pIml->SendData(buf,len,marker) : 0 ;
+    return CheckRtpSessionMgrPointer(p) ? p->pIml->SendData(buf,len,marker,pt) : 0 ;
 }
 
 int RcvDataWithTsRtpSession(CRtpSessionManager* p,uint8_t* buf,int len,uint32_t ts,CRcvCb rcvCb,void* user)
